@@ -17,8 +17,6 @@ let dbWarehouseData = ref([])
 let personName = ref(null)
 let cost = ref(null)
 let description = ref(null)
-
-// GET
 const getData = async() => {
     loading.value = true
     await getAccountancyData()
@@ -26,32 +24,26 @@ const getData = async() => {
     loading.value = false
 }
 
+// Get All Balance Logs
 const getAccountancyData = async() =>{
   axios.get(serverURL + '/api/balanceLogs/' + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
     (res)=>{
-      transactionData.value = res.data
+      dbAccountData.value = res.data
     }
   )
   .catch(function (error) { console.log(error)})
 }
 
+// Get All Item Logs
 const getWarehouseData = async() =>{
-    axios.get(serverURL + "/api/itemLogs/").then(
+    axios.get(serverURL + "/api/itemLogs/" + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
     (res)=>{
-        let temp = []
-        // selects * where "res.data.date === today"
-        for(let i=0;i<res.data.length;i++){
-            if(res.data[i].date == dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')){
-                temp.push(res.data[i])
-            }
-        }
-        dbWarehouseData.value = temp
+        dbWarehouseData.value = res.data
     })
     .catch(function (error) { console.log(error)})
 }
 
 getData()
-
 </script>
 <template>
     <main class="flex flex-col pt-[20px] justify-center items-center">

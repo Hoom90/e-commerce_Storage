@@ -6,7 +6,7 @@ import error from '../commons/error.vue'
 import CloseIcon from '../commons/removeIcon.vue'
 import Search from '../commons/searchIcon.vue'
 import AuthService from "../services/auth.service"
-import PlusIcon from '../commons/addIcon.vue'
+import PlusIcon from '../assets/addIcon.svg'
 import MinusIcon from '../commons/reduceIcon.vue'
 import router from '../router'
 import route from '../router'
@@ -26,22 +26,34 @@ const openError = ref(false)
 const errorMessage = ref(null)
 const getData = async () => {
     loading.value = true
+    getDBData()
+    getBalanceData()
+    loading.value = false
+}
+
+// Get All Items
+const getDBData = async () =>{
     await axios.get(serverURL + "/api/itemTransaction/")
-        .then((res)=>{
-            dbData.value = res.data;
-        })
-        .catch(function (error) {
-            console.log(error);
-        })
-    await axios.get(serverURL + "/api/balanceTransaction/").then((Response)=>{
+    .then((res)=>{
+        dbData.value = res.data;
+    })
+    .catch(function (error) {
+        console.log(error)
+        loading.value = false
+    })
+}
+
+// Get Last Balance 
+const getBalanceData = async() =>{
+    balanceData.value = null
+    await axios.get(serverURL + "/api/balanceTransaction/")
+    .then((Response)=>{
         balanceData.value = Response.data
-        })
-        .catch(function (error) {
-            console.log(error);
-        })
-        .finally(
-            loading.value = false
-        )
+    })
+    .catch(function (error) {
+        console.log(error);
+        loading.value = false
+    })
 }
 
 const putData = async () => {

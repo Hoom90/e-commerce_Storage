@@ -22,18 +22,20 @@ const loading = ref(false)
 const openError = ref(false)
 const errorMessage = ref(null)
 const init = ref(true)
+
+// Get All Data
 const getData = async () => {
     loading.value = true
     axios.get(serverURL + "/api/itemTransaction/")
-        .then((res)=>{
-            dbData.value = res.data;
-        })
-        .catch(function (error) {
-            console.log(error);
-        })
-        .finally(
-            loading.value = false
-        )
+    .then((res)=>{
+        dbData.value = res.data;
+    })
+    .catch(function (error) {
+        console.log(error);
+    })
+    .finally(
+        loading.value = false
+    )
 }
 
 const postData = async () => {

@@ -24,19 +24,19 @@ const loading = ref(false)
 const openError = ref(false)
 const errorMessage = ref(null)
 
+// Get One by Id
 const getData = async()=> {
     loading.value = true
-    await fetch(serverURL + "/api/itemTransaction/" + route.currentRoute.value.params.id)
-        .then((res) => res.json())
-        .then((data) => {
-            if (data.length != 0) {
-                dbData.value = data;
-                loading.value = false
-            }
-            else {
-                loading.value = false
-            }
-        })
+    axios.get(serverURL + "/api/itemTransaction/" + route.currentRoute.value.params.id)
+        .then((res)=>{
+        dbData.value = res.data;
+    })
+    .catch(function (error) {
+        console.log(error);
+    })
+    .finally(
+        loading.value = false
+    )
 }
 
 const patchData  = async() =>{
@@ -76,25 +76,23 @@ const patchData  = async() =>{
 
 const deleteData  = async() =>{
     loading.value = true
-    const formData = new FormData()
-    formData.append('logicalDelete', "true")
-    formData.append('date', dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD'))
-    await fetch(serverURL + "/api/itemTransaction/" + route.currentRoute.value.params.id, {
-        method: "DELETE",
-        body: formData,
+    const body = {
+        'logicalDelete': "true",
+        'date': dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
+    }
+    axios.delete(serverURL + "/api/itemTransaction/" + route.currentRoute.value.params.id, body, {
         headers: {
             'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
-        },
+        }
     })
-        .then((res) => {
-            if (!res.ok) {
-                loading.value = false
-                openError.value = true
-                errorMessage.value = "مشکلی رخ داد دوباره تلاش کنید!"
-            }
-            loading.value = false
-        })
-        .then(router.push('/warehouse'));
+    .catch(function (error) {
+        console.log(error);
+    })
+    .finally(
+        loading.value = false,
+        router.push('/warehouse')
+    )
+        
 }
 
 const calculator = () =>{

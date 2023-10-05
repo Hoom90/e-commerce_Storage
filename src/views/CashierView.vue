@@ -25,7 +25,8 @@ let description = ref(null)
 let card = ref(null)
 let cash = ref(null)
  
-// GET
+// Get All Logs
+// Get Last Balance
 const getData = async() => {
   balanceData.value = {
     'income':null,
@@ -35,9 +36,9 @@ const getData = async() => {
   transactionData.value = null
   openError.value = false
   loading.value = true
-  axios.get(serverURL + "/api/balanceTransaction/").then(
+  axios.get(serverURL + "/api/balanceTransaction/ + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')").then(
     (res)=>{
-        balanceData.value = res.data[res.data.length-1]
+        if(res.data.length != 0) balanceData.value = res.data[res.data.length-1]
     }
   )
   axios.get(serverURL + '/api/balanceLogs/' + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
@@ -167,18 +168,20 @@ const deleteData = async (index) =>{
         "logicalDelete": "true",
         "date":dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD'),
     };
-    await fetch(serverURL + "/api/balanceTransaction/" + id, {
-    method: "DELETE",
-    body: JSON.stringify(body),
+    axios.delete(serverURL + "/api/balanceTransaction/" + id,body, {
     headers: {
         'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
         'Accept': 'application/json',
         'Content-Type': 'application/json'
         }
+    }).catch(err=>{
+        console.log(err);
     })
-    loading.value = false,
-    document.querySelector('div[name=data'+index+']').classList.replace('grid','hidden'),
-    getData()
+    .finally(
+        loading.value = false,
+        document.querySelector('div[name=data'+index+']').classList.replace('grid','hidden'),
+        getData()
+    )
 }
 
 const updateOpenError = (value) => {
@@ -201,9 +204,9 @@ getData()
             
 
             <div class="flex justify-between p-[20px]">
-                <span>درآمد امروز: {{ balanceData.income ? balanceData.income : '0' }}</span>
-                <span>خرج امروز: {{ balanceData.outcome ? balanceData.outcome : '0' }}</span>
-                <span>موجودی امروز: {{ balanceData.balance ? balanceData.balance : '0' }}</span>
+                <span>درآمد امروز: {{ balanceData.income ? balanceData.income : '0' }} تومان</span>
+                <span>خرج امروز: {{ balanceData.outcome ? balanceData.outcome : '0' }} تومان</span>
+                <span>موجودی امروز: {{ balanceData.balance ? balanceData.balance : '0' }} تومان</span>
             </div>
 
             <!-- table -->
@@ -218,7 +221,7 @@ getData()
                     <div v-if="transactionData != null" class="overflow-y-auto">
                       <div v-for="(data,index) in transactionData" class="grid grid-flow-col grid-cols-12 border-b odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" :name="'data'+index" v-bind:key="index">
                           <div class="flex justify-center items-center text-[12px] truncate col-span-4 p-2 px-3">{{ data.personName ? data.personName : "شما" }}</div>
-                          <div class="border-r flex justify-center items-center text-[12px] truncate col-span-3 p-2 px-3" dir='ltr'>{{ data.cost ? "- " + data.cost.toLocaleString() : "+ " + (parseInt(data.cash) + parseInt(data.card))  }}</div>
+                          <div class="border-r flex justify-center items-center text-[12px] truncate col-span-3 p-2 px-3" dir='ltr'>{{ data.cost ? "- " + data.cost.toLocaleString() : "+ " + (parseInt(data.cash) + parseInt(data.card))  }} تومان</div>
                           <div class="border-r flex justify-center items-center text-[12px] truncate col-span-4 p-2 px-3">{{ data.description ? data.description : 'نقدی و کارتی' }}</div>
                           <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">
                               <button class="bg-red-500 p-1 rounded-md text-white hover:bg-red-600 shadow-lg hover:shadow-none" @click="deleteData(index)">
@@ -249,11 +252,11 @@ getData()
             <div class="bg-white w-full h-[10vh] grid grid-cols-1 md:grid-cols-4 justify-center items-center gap-4 px-[20px]">
                 <div class="flex items-center justify-between gap-1 w-full col-span-1">
                     <span>کارتخوان:</span>
-                    <input type="text" maxlength="15" class="border rounded-md h-[30px] w-4/5 px-2 outline-none" placeholder="0" dir="ltr" v-model="card">
+                    <input type="text" maxlength="15" class="border rounded-md h-[30px] w-4/5 px-2 outline-none" placeholder="0" dir="ltr" v-model="card"> تومان
                 </div>
                 <div class="flex items-center justify-between gap-1 w-full col-span-1">
                     <span>نقدی:</span>
-                    <input type="text" maxlength="15" class="border rounded-md h-[30px] w-4/5 px-2 outline-none" placeholder="0" dir="ltr" v-model="cash">
+                    <input type="text" maxlength="15" class="border rounded-md h-[30px] w-4/5 px-2 outline-none" placeholder="0" dir="ltr" v-model="cash"> تومان
                 </div>
                 <div class="col-span-1 w-full">
                     <button class="bg-blue-500 text-white p-1 px-3 rounded-md w-full lg:w-fit hover:bg-blue-600 shadow-md hover:shadow-none" @click="postIncome">لحاظ تغییرات</button>

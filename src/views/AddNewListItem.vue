@@ -8,6 +8,7 @@ import ArrowIcon from '../commons/arrowLeftIcon.vue'
 import RemoveIcon from '../commons/removeIcon.vue'
 import AddNewItem from '../components/addNewItem.vue'
 import router from '../router'
+import axios from 'axios'
 
 const billInfo = ref(null)
 const costs = ref(0)
@@ -20,21 +21,23 @@ const errorMessage = ref(null)
 const billData = ref([])
 const modal = ref(false)
 
-
+// Get All Data
 const getData = async()=> {
     loading.value = true
-    await fetch(serverURL + "/api/itemTransaction/")
-        .then((res) => res.json())
-        .then((data) => {
-            dbData.value = data;
-            loading.value = false
-        })
+    axios.get(serverURL + "/api/itemTransaction/")
+    .then((res)=>{
+        dbData.value = res.data;
+    })
+    .catch(function (error) {
+        console.log(error);
+    })
+    .finally(
+        loading.value = false
+    )
 }
 
 const postData = async () => {
     loading.value = true
-    await AuthService.generateNewToken()
-    const token = sessionStorage.getItem('token')
     for(let i=0;i<billData.value.length;i++){
         let fail = false
         const formData = new FormData()
@@ -50,7 +53,7 @@ const postData = async () => {
             method: "POST",
             body: formData,
             headers: {
-                'Authorization': 'Bearer ' + token,
+                'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
             }
         })
             .then((res) => {

@@ -19,6 +19,17 @@ let logs = ref(null)
 let balance = ref(null)
 
 const getData = async() => {
+    loading.value = true
+    initializeVariables()
+    await getLogs()
+    await getBalance()
+    await setBalance()
+    await setLog()
+    await setHistory()
+    loading.value = false
+}
+
+const initializeVariables = () =>{
     dbData.value = null
     dbData2.value = null
     historyData.value = []
@@ -26,23 +37,25 @@ const getData = async() => {
     logsData.value = []
     logs.value = null
     balance.value = null
+}
 
-    loading.value = true
+// Get All Balance Logs
+const getLogs = async () =>{
     await axios.get(serverURL + "/api/balanceLogs/").then(Response =>{
         dbData.value = Response.data
     })
-    .catch(function (error) { console.log(error)})
+    .catch(function (error) { console.log(error), loading.value = false})
+}
+
+// Get Last Balance
+const getBalance = async () =>{
     await axios.get(serverURL + "/api/balanceTransaction/").then((Response)=>{
         dbData2.value = Response.data
     })
-    .catch(function (error) { console.log(error)})
-    await getBalance()
-    await getLog()
-    await getHistory()
-    loading.value = false
+    .catch(function (error) { console.log(error), loading.value = false})
 }
 
-const getHistory = async() => {
+const setHistory = async() => {
     const sample = [];
     await dbData.value.forEach(item => {
         if (!sample.includes(item.date)) {
@@ -52,7 +65,7 @@ const getHistory = async() => {
     });
 }
 
-const getBalance = async()=>{
+const setBalance = async()=>{
     const sample = [];
     await dbData2.value.forEach( item =>{
         if (!sample.includes(item.date)) {
@@ -62,7 +75,7 @@ const getBalance = async()=>{
     })
 }
 
-const getLog = async() =>{
+const setLog = async() =>{
     await dbData.value.forEach(item => {
         logsData.value.push(item);
     });
@@ -195,13 +208,13 @@ getData()
                 <div class="flex justify-center items-center gap-10 border-b p-3">
                     <div class="flex gap-3">
                         <span>نقد:</span>
-                        <span>{{ balance.cash }}</span>
+                        <span>{{ balance.cash }} تومان</span>
                     </div>
                     <div class="flex gap-3">
                         <span>کارت به کارت:</span>
-                        <span>{{ balance.card }}</span>
+                        <span>{{ balance.card }} تومان</span>
                     </div>
-                    <span>{{ balance.date }}</span>
+                    <span class="text-red-500">{{ balance.date }}</span>
                 </div>
             </div>
             <div class="h-[90%]"> 
@@ -216,9 +229,9 @@ getData()
                     <div v-for="(data,index) in logs" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" :name="'persons' + index" v-bind:key='index'>
                         <button @click="handleLogs(index)" class="grid grid-flow-col grid-cols-3 w-full p-1 border-b">
                             <span>{{ data.personName ? data.personName : "شما" }}</span>
-                            <span v-if='data.cost'>{{ data.cost }}</span>
+                            <span v-if='data.cost'>{{ data.cost }} تومان</span>
                             <span v-if='data.cash || data.card'>
-                            {{ (data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0) }}
+                            {{ (data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0) }} تومان
                             </span>
                             <span>{{ data.description ? data.description : 'نقدی و کارت' }}</span>
                         </button>

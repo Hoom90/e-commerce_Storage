@@ -3,26 +3,28 @@ import { ref } from 'vue'
 import Loading from '../commons/loading.vue'
 import serverURL from '../router/serverAddress'
 import error from '../commons/error.vue'
-import AddIcon from '../commons/addIcon.vue'
+import AddIconSVG from '../assets/addIcon.svg'
 import SearchIcon from '../commons/searchIcon.vue'
+import axios from 'axios'
 
 const dbData = ref(null)
 const loading = ref(false)
 const openError = ref(false)
 const errorMessage = ref(null)
 
+// Get All Items
 const getData = async()=> {
     loading.value = true
-    await fetch(serverURL + "/api/itemTransaction/")
-        .then((res) => res.json())
-        .then((data) => {
-            dbData.value = data;
-        })
-    // loading.value = false
-    //     await axios.get(serverURL + "/api/itemTransaction/").then((Response)=>{
-    //     dbData.value = Response.data
-    // })
-    // .catch(function (error) { console.log(error)})
+    axios.get(serverURL + "/api/itemTransaction/")
+    .then((res)=>{
+        dbData.value = res.data;
+    })
+    .catch(function (error) {
+        console.log(error);
+    })
+    .finally(
+        loading.value = false
+    )
 }
 
 const updateOpenError = (value) => {
@@ -59,7 +61,7 @@ getData()
             <div class="py-[10px] px-[20px] flex justify-between gap-1 w-full">
                 <div class="flex gap-1">
                     <RouterLink to="/warehouse/newItem" class="flex justify-center items-center text-white bg-blue-500 hover:bg-blue-600 rounded px-2">
-                        <AddIcon/>
+                        <AddIconSVG/>
                     </RouterLink>
                     <div class="border rounded flex justify-center items-center px-1">
                         <input type="text" ref="searchBox2" class="outline-none px-1 bg-transparent min-w-[200px]" placeholder="جستجو" @input="searchData">
@@ -81,15 +83,15 @@ getData()
                 <div class="grid grid-flow-col grid-cols-12 border-b border-t">
 
                     <div class="py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">رکورد</div>
-                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-7">نام
+                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-6 lg:col-span-7">نام
                     </div>
-                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">وزن
+                    <div class="border-r py-2 px-3 hidden lg:flex justify-center items-center text-[12px] truncate lg:col-span-1">وزن
                     </div>
-                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">فی
+                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-3 lg:col-span-1">فی(تومان)
                     </div>
-                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">تعداد
+                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] col-span-3 truncate lg:col-span-1">تعداد(عدد)
                     </div>
-                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">تاریخ
+                    <div class="border-r py-2 px-3 hidden lg:flex justify-center items-center text-[12px] truncate lg:col-span-1">تاریخ
                     <br class="block md:hidden"/>دریافت</div>
                     
                 </div>
@@ -99,17 +101,17 @@ getData()
                     <RouterLink :to="'/warehouse/' + data._id" v-for="(data, index) in dbData" class="grid grid-flow-col grid-cols-12 border-b min-h-[30px] hover:bg-gray-50 cursor-pointer" id="tableData" v-bind:key="index">
                         <div class="py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">{{ index + 1 }}
                         </div>
-                        <div id="dataName" class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-7">
+                        <div id="dataName" class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-6 lg:col-span-7">
                             {{ data.name }}</div>
-                        <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">
+                        <div class="border-r py-2 px-3 hidden lg:flex justify-center items-center text-[12px] truncate lg:col-span-1">
                             {{ data.weight ? data.weight == 'null' ? "-" : data.weight : "-" }}</div>
-                        <div class="border-r py-2 px-3 flex flex-col gap-1 justify-center items-center text-[12px] truncate col-span-1">
+                        <div class="border-r py-2 px-3 flex flex-col gap-1 justify-center items-center text-[12px] truncate col-span-3 lg:col-span-1">
                             <span class="text-white bg-red-500 p-1">{{ data.basePrice ? data.basePrice == 'null' ? "-" : data.basePrice : "-" }}</span>
                             <span class="text-white bg-green-500 p-1">{{ data.price ? data.price == 'null' ? "-" : data.price : "-" }}</span></div>
-                        <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">
+                        <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-3 lg:col-span-1">
                             {{ data.amount ? data.amount == 'null' ? "-" : data.amount : "-" }}</div>
                         <div
-                            class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1 flex-col">
+                            class="border-r py-2 px-3 hidden lg:flex justify-center items-center text-[12px] truncate lg:col-span-1 flex-col">
                             <span dir='ltr'>{{ data.date ? data.date == 'null' ? "-" : data.date : "-" }}</span>
                         </div>
                     </RouterLink>
