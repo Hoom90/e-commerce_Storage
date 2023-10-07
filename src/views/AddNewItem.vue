@@ -1,11 +1,11 @@
 <script setup>
+import ArrowIconSVG from '../assets/arrowLeftIcon.svg'
+import SearchIconSVG from '../assets/searchIcon.svg'
 import { ref } from 'vue'
-import Loading from '../commons/loading.vue'
-import serverURL from '../router/serverAddress'
-import error from '../commons/error.vue'
-import Arrow from '../commons/arrowLeftIcon.vue'
-import Search from '../commons/searchIcon.vue'
-import router from '../router'
+import Loading from '../components/loading.vue'
+import error from '../components/error.vue'
+import serverURL from '../config/serverAddress'
+import router from '../config'
 import axios from 'axios'
 
 let name = ref(null)
@@ -184,16 +184,18 @@ getData()
 </script>
 <template>
     <!-- single add -->
+    <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
+        {{message}}
+        <i>x</i>
+    </button>
     <div class="w-full p-[20px]">
         <div class="max-w-[800px] mx-auto my-[20px] border rounded-md p-[10px]">
             <!-- header -->
             <div class="flex justify-center">
                 <div class="flex items-center">
                     <RouterLink to="/warehouse"
-                        class="flex gap-1 items-center hover:bg-blue-500 hover:text-white border border-blue-500 rounded-md px-2 p-1">
-                        <i>
-                            <Arrow />
-                        </i>
+                        class="flex gap-1 items-center hover:bg-blue-500 w-[100px] hover:text-white border border-blue-500 rounded-md px-2 p-1">
+                        <img :src="ArrowIconSVG" alt="ArrowIconSVG">
                         برگشتن
                     </RouterLink>
                 </div>
@@ -207,9 +209,7 @@ getData()
                 <div class="flex gap-1 items-center border rounded px-1">
                     <input type="text" ref="searchBox" class="outline-none min-w-[300px] w-full"
                         placeholder="جستجو در بین کالاهای موجود" @keyup="searchWord">
-                    <i>
-                        <Search />
-                    </i>
+                    <img :src="SearchIconSVG" alt="SearchIconSVG">
                 </div>
                 <!-- search result -->
                 <div

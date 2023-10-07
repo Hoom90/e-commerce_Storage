@@ -1,19 +1,25 @@
 <script setup>
 import axios from 'axios';
 import { ref } from 'vue'
-import Loading from '../commons/loading.vue'
-import serverURL from '../router/serverAddress'
-import AuthService from "../services/auth.service";
-import router from '../router'
+import Loading from '../components/loading.vue'
+import serverURL from '../config/serverAddress'
+import router from '../config'
+import dayjs from 'dayjs'
+import jalaliday from 'jalaliday'
+dayjs.extend(jalaliday)
 
 const dbData = ref(null)
 const dbData2 = ref(null)
+const message = ref(null)
 const loading = ref(false)
 const init = ref(true)
 
 const historyData = ref([])
 const balanceData = ref([])
 const logsData = ref([])
+
+const monthProfit = ref(null)
+const weekProfit = ref(null)
 
 let logs = ref(null)
 let balance = ref(null)
@@ -26,6 +32,7 @@ const getData = async() => {
     await setBalance()
     await setLog()
     await setHistory()
+    profitCalculator()
     loading.value = false
 }
 
@@ -44,7 +51,7 @@ const getLogs = async () =>{
     await axios.get(serverURL + "/api/balanceLogs/").then(Response =>{
         dbData.value = Response.data
     })
-    .catch(function (error) { console.log(error), loading.value = false})
+    .catch(function (error) { console.log(error), loading.value = false,message.value = error})
 }
 
 // Get Last Balance
@@ -52,7 +59,7 @@ const getBalance = async () =>{
     await axios.get(serverURL + "/api/balanceTransaction/").then((Response)=>{
         dbData2.value = Response.data
     })
-    .catch(function (error) { console.log(error), loading.value = false})
+    .catch(function (error) { console.log(error), loading.value = false,message.value = error})
 }
 
 const setHistory = async() => {
@@ -148,6 +155,7 @@ const patchData = async (index) =>{
     })
     .catch(function (error) {
         console.log(error);
+        message.value = error
     }).finally(
         loading.value = false,
         await getData()
@@ -179,6 +187,31 @@ const handleLogs = (index) =>{
     }
 }
 
+const profitCalculator = () =>{
+    let incomes = 0,outcomes=0,balances=0
+    const sample = [] , temp = [];
+    for(let i=dbData2.value.length -1 ; i >0;i--){
+        if (!sample.includes(dbData2.value[i].date)) {
+            temp.push(dbData2.value[i]);
+            sample.push(dbData2.value[i].date);
+        }
+    }
+    // console.log(temp);
+    temp.forEach(item =>{
+        incomes = parseInt(incomes)+ parseInt(item.income)
+        outcomes = parseInt(outcomes)+ parseInt(item.outcome)
+        balances = parseInt(balances)+ parseInt(item.balance)
+    })
+    // console.log(incomes);
+    // console.log(outcomes);
+    // console.log(balances);
+    // console.log(dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD'))
+    // console.log(parseInt(parseInt(dayjs().calendar('jalali').locale('fa').format('DD')) / 7))
+    console.log(parseInt(30 / 7)+1)
+    // console.log(dayjs().calendar('jalali').locale('fa').format('MM'))
+    // console.log(dbData.value);
+}
+
 getData()
 
 </script>
@@ -189,9 +222,32 @@ getData()
             <span>&#62;</span>
             <div>دخل و خرج ها</div>
         </div>
-        <div class='grid grid-flow-row grid-cols-6 gap-1 w-full px-[20px] h-[75vh]'>
+        <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
+            {{message}}
+            <i>x</i>
+        </button>
+        <div class='grid grid-flow-col grid-cols-6 gap-1 w-full px-[20px] h-[75vh]'>
+
+          <!-- profits -->
+          <div :class="logs ? 'col-span-1 overflow-y-auto border h-full' : 'col-span-1 overflow-y-auto border h-full'">
+            <!-- week -->
+            <div class="border-b bg-white py-2 px-3 flex justify-center items-center truncate">
+            سود این هفته
+            </div>
+            <div class="border-b bg-gray-100 hover:bg-gray-200 py-2 px-3 flex justify-center items-center truncate" id='weekProfitDataContainer'>
+            {{ weekProfit ? weekProfit : '0'}}
+            </div>
+            <!-- month -->
+            <div class="border-b bg-white py-2 px-3 flex justify-center items-center truncate">
+            سود این ماه
+            </div>
+            <div class="border-b bg-gray-100 hover:bg-gray-200 py-2 px-3 flex justify-center items-center truncate" id='monthProfitDataContainer'>
+            {{ monthProfit ? monthProfit : '0' }}
+            </div> 
+          </div>
+
           <!-- closed accounts -->
-          <div :class="logs ? 'col-span-1 overflow-y-auto border h-full' : 'col-span-6 overflow-y-auto border h-full'">
+          <div :class="logs ? 'col-span-1 overflow-y-auto border h-full' : 'col-span-5 overflow-y-auto border h-full'">
               <div class="border-b bg-white">
                   <div class="py-2 px-3 flex justify-center items-center truncate">تاریخ</div>
               </div>
@@ -203,7 +259,7 @@ getData()
           </div>
 
           <!-- table -->
-          <div :class="logs ? 'col-span-5 h-full border' : ''" v-if="logs">
+          <div :class="logs ? 'col-span-4 h-full border' : ''" v-if="logs">
             <div v-if="balance" class="flex flex-col">
                 <div class="flex justify-center items-center gap-10 border-b p-3">
                     <div class="flex gap-3">

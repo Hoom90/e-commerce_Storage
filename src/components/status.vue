@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import Loading from '../commons/loading.vue'
+import Loading from './loading.vue'
 import serverURL from '../router/serverAddress'
 import AuthService from "../services/auth.service";
 
@@ -78,8 +78,6 @@ const patchData = async (index,index2) =>{
     else if(index2 != null){
         id = selectedDateIncome.value.data._id
     }
-    await AuthService.generateNewToken()
-    const token = sessionStorage.getItem('token')
     let body = null
     if(index != null){
         let name = document.querySelector('#personName'+index).value
@@ -103,7 +101,7 @@ const patchData = async (index,index2) =>{
         method: "PATCH",
         body: JSON.stringify(body),
         headers: {
-            'Authorization': 'Bearer ' + token,
+            'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
             'Accept': 'application/json',
             'Content-Type': 'application/json'
         }

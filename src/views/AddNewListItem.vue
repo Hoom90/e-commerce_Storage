@@ -1,13 +1,12 @@
 <script setup>
 import { ref } from 'vue'
-import Loading from '../commons/loading.vue'
-import serverURL from '../router/serverAddress'
-import error from '../commons/error.vue'
-import AuthService from '../services/auth.service'
-import ArrowIcon from '../commons/arrowLeftIcon.vue'
-import RemoveIcon from '../commons/removeIcon.vue'
+import ArrowIconSVG from '../assets/arrowLeftIcon.svg'
+import RemoveIconSVG from '../assets/removeIcon.svg'
+import Loading from '../components/loading.vue'
+import serverURL from '../config/serverAddress'
+import error from '../components/error.vue'
 import AddNewItem from '../components/addNewItem.vue'
-import router from '../router'
+import router from '../config'
 import axios from 'axios'
 
 const billInfo = ref(null)
@@ -38,8 +37,8 @@ const getData = async()=> {
 
 const postData = async () => {
     loading.value = true
+    let fail = false
     for(let i=0;i<billData.value.length;i++){
-        let fail = false
         const formData = new FormData()
         formData.append('name', billData.value[i].name)
         formData.append('weight', billData.value[i].weight)
@@ -59,8 +58,7 @@ const postData = async () => {
             .then((res) => {
                 if (!res.ok) {
                     loading.value = false
-                    openError.value = true
-                    errorMessage.value = "مشکلی رخ داد دوباره تلاش کنید!" 
+                    message.value = res
                     fail = true
                 }
             })
@@ -78,10 +76,6 @@ const removeItemFromList = (index) =>{
     billData.value.splice(index, 1);
 }
 
-const updateOpenError = (value) => {
-    openError.value = value
-}
-
 const updateModal = (value) =>{
     modal.value = value
 }
@@ -96,17 +90,18 @@ getData()
 </script>
 <template>
     <!-- multi add -->
+    <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
+        {{message}}
+        <i>x</i>
+    </button>
     <div class="w-full p-[20px]" v-if="!modal">
         <div class="max-w-[800px] mx-auto my-[20px] border rounded-md p-[10px]">
 
             <!-- header -->
             <div class="flex justify-center">
                 <div class="flex items-center">
-                    <RouterLink to="/warehouse" class="flex gap-1 items-center hover:bg-red-500 hover:text-white border border-red-500 rounded-md px-2 p-1">
-                        <i>
-                            <ArrowIcon/>
-                        </i>
-                        بستن
+                    <RouterLink to="/warehouse" class="flex gap-1 items-center hover:bg-red-500 hover:text-white border border-red-500 rounded-md p-2">
+                        <img :src="RemoveIconSVG" alt="RemoveIconSVG">
                     </RouterLink>
                 </div>
                 <div class="flex w-full justify-center">
@@ -132,7 +127,7 @@ getData()
                                     <span>{{ item.basePrice != null ? "تومان "+item.basePrice : "بدون قیمت"}}</span>
                                 </button>
                                 <button class='bg-red-500 text-white p-1' @click="removeItemFromList(index)">
-                                    <RemoveIcon/>
+                                    <img :src="RemoveIconSVG" alt="RemoveIconSVG">
                                 </button>
                             </div>
                         </div>
@@ -160,7 +155,6 @@ getData()
     </div>
     <AddNewItem v-if="modal" :modal="modal" :data="dbData" :billId="billInfo" @update:modal="updateModal" @set:item="updateItem"></AddNewItem>
     <Loading :loading="loading"></Loading>
-    <error :errorMessage="errorMessage" :openError="openError" @update="updateOpenError"></error>
 </template>
 <style scoped>
 input{

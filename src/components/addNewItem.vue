@@ -1,7 +1,7 @@
 <script setup>
 import { ref , getCurrentInstance , defineProps } from 'vue'
-import ArrowIcon from '../commons/arrowLeftIcon.vue'
-import SearchIcon from '../commons/searchIcon.vue'
+import ArrowIconSVG from '../assets/arrowLeftIcon.svg'
+import SearchIconSVG from '../assets/searchIcon.svg'
 
 const { emit } = getCurrentInstance()
 
@@ -158,9 +158,7 @@ const handleModal = () =>{
             <div class="flex justify-center">
                 <div class="flex items-center">
                     <button @click="handleModal" class="flex gap-1 items-center hover:bg-blue-500 hover:text-white border border-blue-500 rounded-md px-2 p-1">
-                        <i>
-                            <ArrowIcon/>
-                        </i>
+                        <img :src="ArrowIconSVG" alt="ArrowIconSVG">
                     </button>
                 </div>
                 <div class="flex w-full justify-center">
@@ -171,9 +169,7 @@ const handleModal = () =>{
             <div class="flex flex-col gap-1 my-1">
                 <div class="flex gap-1 items-center border rounded px-1">
                     <input type="text" ref="searchBox" class="outline-none min-w-[300px] w-full" placeholder="جستجو در بین کالاهای موجود" @keyup="searchWord">
-                    <i>
-                        <SearchIcon/>
-                    </i>
+                    <img :src="SearchIconSVG" alt="SearchIconSVG">
                 </div>
                 <!-- search result -->
                 <div

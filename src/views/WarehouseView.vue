@@ -1,15 +1,14 @@
 <script setup>
-import { ref } from 'vue'
-import Loading from '../commons/loading.vue'
-import serverURL from '../router/serverAddress'
-import error from '../commons/error.vue'
 import AddIconSVG from '../assets/addIcon.svg'
-import SearchIcon from '../commons/searchIcon.vue'
+import SearchIconSVG from '../assets/searchIcon.svg'
+import { ref } from 'vue'
+import Loading from '../components/loading.vue'
+import serverURL from '../config/serverAddress'
 import axios from 'axios'
 
 const dbData = ref(null)
+const message = ref(null)
 const loading = ref(false)
-const openError = ref(false)
 const errorMessage = ref(null)
 
 // Get All Items
@@ -21,14 +20,11 @@ const getData = async()=> {
     })
     .catch(function (error) {
         console.log(error);
+        message.value = error
     })
     .finally(
         loading.value = false
     )
-}
-
-const updateOpenError = (value) => {
-    openError.value = value
 }
 
 const searchBox2 =ref(null)
@@ -56,16 +52,20 @@ getData()
         <div class="text-[24px] w-full px-5 flex items-center gap-5 justify-between">
             <span>ثبت کالا</span>
         </div>
+        <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
+            {{message}}
+            <i>x</i>
+        </button>
         <div class="border w-[90%] mt-3">
             <!-- table tools -->
             <div class="py-[10px] px-[20px] flex justify-between gap-1 w-full">
                 <div class="flex gap-1">
                     <RouterLink to="/warehouse/newItem" class="flex justify-center items-center text-white bg-blue-500 hover:bg-blue-600 rounded px-2">
-                        <AddIconSVG/>
+                        <img :src="AddIconSVG" alt="AddIconSVG"/>
                     </RouterLink>
                     <div class="border rounded flex justify-center items-center px-1">
                         <input type="text" ref="searchBox2" class="outline-none px-1 bg-transparent min-w-[200px]" placeholder="جستجو" @input="searchData">
-                        <SearchIcon/>
+                        <img :src="SearchIconSVG" alt="SearchIconSVG">
                     </div>
                 </div>
                 <div class="flex gap-1">
@@ -121,7 +121,7 @@ getData()
         </div>
     </main>
 <Loading :loading="loading"></Loading>
-<error :errorMessage="errorMessage" :openError="openError" @update="updateOpenError"></error></template>
+</template>
 <style scoped>
 input{
     padding: 5px;

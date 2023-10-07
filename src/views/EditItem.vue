@@ -1,10 +1,11 @@
 <script setup>
 import { ref } from 'vue'
-import Loading from '../commons/loading.vue'
-import serverURL from '../router/serverAddress'
-import error from '../commons/error.vue'
-import router from '../router'
-import route from '../router'
+import Loading from '../components/loading.vue'
+import error from '../components/error.vue'
+import serverURL from '../config/serverAddress'
+import ArrowIconSVG from '../assets/arrowLeftIcon.svg'
+import router from '../config'
+import route from '../config'
 import dayjs from 'dayjs'
 import jalaliday from 'jalaliday'
 import axios from 'axios'
@@ -20,6 +21,7 @@ const dbData = ref({
     billId:'',
     date:'',
 })
+const message = ref(null)
 const loading = ref(false)
 const openError = ref(false)
 const errorMessage = ref(null)
@@ -31,8 +33,10 @@ const getData = async()=> {
         .then((res)=>{
         dbData.value = res.data;
     })
-    .catch(function (error) {
+    .catch((error) => {
         console.log(error);
+        loading.value = false
+        message.value = error
     })
     .finally(
         loading.value = false
@@ -66,8 +70,10 @@ const patchData  = async() =>{
             'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
         }
     })
-    .catch(function (error) {
+    .catch((error) => {
         console.log(error);
+        loading.value = false
+        message.value = error
     }).finally(
         loading.value = false,
         router.push('/warehouse')
@@ -85,8 +91,10 @@ const deleteData  = async() =>{
             'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
         }
     })
-    .catch(function (error) {
+    .catch((error) =>{
         console.log(error);
+        loading.value = false
+        message.value = error
     })
     .finally(
         loading.value = false,
@@ -158,13 +166,8 @@ getData()
             <div class="flex justify-center">
                 <div class="flex items-center">
                     <RouterLink to="/warehouse"
-                        class="flex gap-1 items-center hover:bg-blue-500 hover:text-white border border-blue-500 rounded-md px-2 p-1">
-                        <i>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M4 12H20M20 12L14 6M20 12L14 18" fill="currentcolor" stroke="currentcolor"
-                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </i>
+                        class="flex gap-1 items-center hover:bg-blue-500 w-[100px] hover:text-white border border-blue-500 rounded-md px-2 p-1">
+                        <img :src="ArrowIconSVG" alt="ArrowIconSVG">
                         برگشتن
                     </RouterLink>
                 </div>

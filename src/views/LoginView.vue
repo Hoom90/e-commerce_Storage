@@ -1,9 +1,9 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import router from '../router';
+import router from '../config';
 import store from '../store';
-import Loading from '../commons/loading.vue'
-import error from '../commons/error.vue'
+import Loading from '../components/loading.vue'
+import error from '../components/error.vue'
 
 const user = { username: '', password: '' }
 const usernameError = ref(false)

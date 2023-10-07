@@ -1,19 +1,21 @@
 <script setup>
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import Loading from '../commons/loading.vue'
-import serverURL from '../router/serverAddress'
-import AuthService from "../services/auth.service";
+import Loading from '../components/loading.vue'
+import serverURL from '../config/serverAddress'
+import AuthService from '../services/auth.service';
 import axios from 'axios'
+import editIconSVG from '../assets/editIcon.svg'
 import dayjs from 'dayjs'
 import jalaliday from 'jalaliday'
-import editIconVue from '../commons/editIcon.vue'
 dayjs.extend(jalaliday)
 
 const loading = ref(false)
-const openError = ref(false)
+const message = ref(null)
+
 let dbAccountData = ref([])
 let dbWarehouseData = ref([])
+
 let personName = ref(null)
 let cost = ref(null)
 let description = ref(null)
@@ -31,7 +33,7 @@ const getAccountancyData = async() =>{
       dbAccountData.value = res.data
     }
   )
-  .catch(function (error) { console.log(error)})
+  .catch(function (error) { console.log(error),loading.value = false,message.value = error})
 }
 
 // Get All Item Logs
@@ -40,7 +42,7 @@ const getWarehouseData = async() =>{
     (res)=>{
         dbWarehouseData.value = res.data
     })
-    .catch(function (error) { console.log(error)})
+  .catch(function (error) { console.log(error),loading.value = false,message.value = error})
 }
 
 getData()
@@ -50,11 +52,15 @@ getData()
         <div class="text-[24px] w-full px-5 flex items-center gap-5 justify-between">
             <span>میزکار</span>
         </div>
+        <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
+            {{message}}
+            <i>x</i>
+        </button>
         <div class="flex flex-col md:flex-row gap-1 w-[90%] text-center h-[70vh] mt-5">
             <div class="border lg:w-3/12 min-h-[200px] max-h-[300px] lg:max-h-none">
-                <RouterLink to="/cashier" class="border-b grid grid-flow-col grid-cols-12 items-center">
+                <RouterLink to="/cashier" class="border-b grid grid-flow-col grid-cols-12 items-center hover:bg-blue-500">
                     <span class='col-span-11'>دخل و خرج امروز</span>
-                    <editIconVue/>
+                    <img :src="editIconSVG" alt="editIconSVG">
                 </RouterLink>
                 <div class="overflow-y-auto" v-if="dbAccountData">
                     <div v-for="(data,index) in dbAccountData" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" v-bind:key='index'>
@@ -71,9 +77,9 @@ getData()
             </div>
             
             <div class="border lg:w-3/12  min-h-[200px] max-h-[300px] lg:max-h-none">
-                <RouterLink to="/warehouse/newOrder" class="border-b grid grid-flow-col grid-cols-12 items-center">
+                <RouterLink to="/warehouse/newOrder" class="border-b grid grid-flow-col grid-cols-12 items-center hover:bg-blue-500">
                     <span class='col-span-11'>فروخته شده های امروز</span>
-                    <editIconVue/>
+                    <img :src="editIconSVG" alt="editIconSVG">
                 </RouterLink>
                 <div class="overflow-y-auto" v-if="dbWarehouseData">
                     <div v-for="(data,index) in dbWarehouseData" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" v-bind:key="index">

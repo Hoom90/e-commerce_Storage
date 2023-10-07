@@ -1,5 +1,5 @@
 import authHeader from "./auth-header";
-import serverURL from "../router/serverAddress";
+import serverURL from "../config/serverAddress";
 
 const API_URL = serverURL + "/api/";
 

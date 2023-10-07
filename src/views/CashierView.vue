@@ -1,8 +1,7 @@
 <script setup>
 import { ref } from 'vue'
-import Loading from '../commons/loading.vue'
-import serverURL from '../router/serverAddress'
-import AuthService from "../services/auth.service";
+import Loading from '../components/loading.vue'
+import serverURL from '../config/serverAddress'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import jalaliday from 'jalaliday'
@@ -15,8 +14,7 @@ const balanceData = ref({
 })
 const transactionData = ref(null)
 const loading = ref(false)
-const openError = ref(false)
-const errorMessage = ref(null)
+const message = ref(null)
 
 let id = ref(null)
 let personName = ref(null)
@@ -24,43 +22,50 @@ let cost = ref(null)
 let description = ref(null)
 let card = ref(null)
 let cash = ref(null)
- 
-// Get All Logs
-// Get Last Balance
 const getData = async() => {
-  balanceData.value = {
-    'income':null,
+    balanceData.value = {
+        'income':null,
     'outcome':null,
     'balance':null
   }
   transactionData.value = null
-  openError.value = false
   loading.value = true
-  axios.get(serverURL + "/api/balanceTransaction/ + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')").then(
-    (res)=>{
-        if(res.data.length != 0) balanceData.value = res.data[res.data.length-1]
-    }
-  )
-  axios.get(serverURL + '/api/balanceLogs/' + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
-    (res)=>{
-      transactionData.value = res.data
-    }
-  )
-  .catch(function (error) { console.log(error)})
-  .finally(loading.value = false);
+  await getBalance()
+  await getBalanceLogs()
+  loading.value = false
+}
+
+// Get Last Balance
+const getBalance = async () =>{
+    await axios.get(serverURL + "/api/balanceTransaction/"+ dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
+      (res)=>{
+          if(res.data.length != 0) balanceData.value = res.data[res.data.length-1]
+      }
+    )
+    .catch(function (error) { console.log(error),loading.value = false,message.value=error})
+}
+
+// Get All Logs
+const getBalanceLogs = async () =>{
+    axios.get(serverURL + '/api/balanceLogs/' + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
+        (res)=>{
+            transactionData.value = res.data
+      }
+    )
+    .catch((error) =>{ console.log(error),loading.value = false,message.value = error})
 }
 
 //POST
-async function postOutcome() {
-    openError.value = false
-    errorMessage.value = null
+const postOutcome = async() => {
+    message.value = null
+    loading.value = true;
     let income = balanceData.value.income ? balanceData.value.income : '0'
     let outcome = balanceData.value.outcome ? (parseInt(balanceData.value.outcome) + parseInt(cost.value)).toString() : cost.value
     let balance = '0'
     if(balanceData.value.balance){
         if(parseInt(balanceData.value.balance) - parseInt(cost.value) < 0){
-            openError.value = true
-            errorMessage.value = "موجودی کم است!";
+            message.value = "موجودی کم است!";
+            loading.value = false;
             return
         }
         else{
@@ -68,11 +73,10 @@ async function postOutcome() {
         }
     }
     else{
-        openError.value = true
-        errorMessage.value = "موجودی کم است!";
+        message.value = "موجودی کم است!";
+        loading.value = false;
         return
     }
-    loading.value = true;
     let body = {
         "income": income,
         "outcome": outcome,
@@ -95,22 +99,22 @@ async function postOutcome() {
         description.value = null
         getData();
     })
-    .catch(function (error) {
+    .catch((error) => {
         console.log(error);
-    }).finally(
+        message.value = error
+    })
+    .finally(
         loading.value = false
     )
 }
 
 // POST
-async function postIncome(){
-    openError.value = false
-    errorMessage.value = null
+const postIncome = async() =>{
     loading.value = true;
     if(card.value == null){
         card.value = 0
     }
-    if(cash.value == null){
+    else if(cash.value == null){
         cash.value = 0
     }
     let income = balanceData.value.balance ? 
@@ -144,9 +148,11 @@ async function postIncome(){
         card.value = null
         getData();
     })
-    .catch(function (error) {
+    .catch((error) => {
         console.log(error);
-    }).finally(
+        message.value = error
+    })
+    .finally(
         loading.value = false
     )
 }
@@ -174,18 +180,16 @@ const deleteData = async (index) =>{
         'Accept': 'application/json',
         'Content-Type': 'application/json'
         }
-    }).catch(err=>{
-        console.log(err);
+    })
+    .catch((error) => {
+        console.log(error);
+        message.value = error
     })
     .finally(
         loading.value = false,
         document.querySelector('div[name=data'+index+']').classList.replace('grid','hidden'),
         getData()
     )
-}
-
-const updateOpenError = (value) => {
-    openError.value = value
 }
 
 getData()
@@ -196,9 +200,10 @@ getData()
         <div class="text-[24px] w-full px-5 flex items-center gap-5 justify-between">
             <span>صندوق</span>
         </div>
-        <div class="absolute w-full top-0 bg-red-500 text-white p-2 text-[12px]" v-if="errorMessage">
-            {{errorMessage}}
-        </div>
+        <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
+            {{message}}
+            <i>x</i>
+        </button>
         <!-- <div v-if="!isTodayClose" id="notebook"> -->
         <div id="notebook">
             
@@ -240,7 +245,7 @@ getData()
                         <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">
                             <button class="bg-blue-500 p-2 px-3 rounded-md text-white hover:bg-blue-600 shadow-lg hover:shadow-none" @click="postOutcome">ذخیره</button></div>
                     </div>
-                    <div class="grid gap-1 mt-1 text-red-500 text-[12px]" v-if="openError && !errorMessage">
+                    <div class="grid gap-1 mt-1 text-red-500 text-[12px]" v-if="message">
                         <span>پر کردن نام الزامیست</span>
                         <span>پر کردن هزینه الزامیست</span>
                         <span>پر کردن توضیحات الزامیست</span>

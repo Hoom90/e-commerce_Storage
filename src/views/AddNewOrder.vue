@@ -1,29 +1,26 @@
 <script setup>
 import { ref } from 'vue'
-import Loading from '../commons/loading.vue'
-import serverURL from '../router/serverAddress'
-import error from '../commons/error.vue'
-import CloseIcon from '../commons/removeIcon.vue'
-import Search from '../commons/searchIcon.vue'
-import AuthService from "../services/auth.service"
-import PlusIcon from '../assets/addIcon.svg'
-import MinusIcon from '../commons/reduceIcon.vue'
-import router from '../router'
-import route from '../router'
+import CloseIconSVG from '../assets/removeIcon.svg'
+import SearchIconSVG from '../assets/searchIcon.svg'
+import PlusIconSVG from '../assets/addIcon.svg'
+import MinusIconSVG from '../assets/reduceIcon.svg'
+import Loading from '../components/loading.vue'
+import error from '../components/error.vue'
+import serverURL from '../config/serverAddress'
+import router from '../config'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import jalaliday from 'jalaliday'
 dayjs.extend(jalaliday)
 
+const dbData = ref(null)
+const balanceData = ref(null)
+const message = ref(null)
+const loading = ref(false)
+
 let name = ref(null)
 let amount = ref(null)
 let type = ref(null)
-
-const dbData = ref(null)
-const balanceData = ref(null)
-const loading = ref(false)
-const openError = ref(false)
-const errorMessage = ref(null)
 const getData = async () => {
     loading.value = true
     getDBData()
@@ -40,19 +37,21 @@ const getDBData = async () =>{
     .catch(function (error) {
         console.log(error)
         loading.value = false
+        message.value = error
     })
 }
 
 // Get Last Balance 
 const getBalanceData = async() =>{
     balanceData.value = null
-    await axios.get(serverURL + "/api/balanceTransaction/")
+    await axios.get(serverURL + "/api/balanceTransaction/" + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD'))
     .then((Response)=>{
-        balanceData.value = Response.data
+        balanceData.value = Response.data[0]
     })
     .catch(function (error) {
         console.log(error);
         loading.value = false
+        message.value = error
     })
 }
 
@@ -111,16 +110,17 @@ const putData = async () => {
         'amount': amount.value.toString(),
         'date': dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
     }
-    console.log(body);
-    // axios.put(serverURL + "/api/itemTransaction/" + id, body,{headers: {
-    //     'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
-    // }})
-    // .catch(function (error) {
-    //     console.log(error);
-    // }).finally(
-    //     loading.value = false,
-    //     router.push('/')
-    // )
+    // console.log(body);
+    axios.put(serverURL + "/api/itemTransaction/" + id, body,{headers: {
+        'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
+    }})
+    .catch((error) => {
+        console.log(error);
+        message.value = error
+    }).finally(
+        loading.value = false,
+        router.push('/')
+    )
 }
 
 const searchBox = ref(null)
@@ -151,10 +151,6 @@ const handleClickData = (index) => {
     document.querySelector('button[name=item' + index + ']').classList.replace('border-gray-200', 'border-blue-500');
 }
 
-const updateOpenError = (value) => {
-    openError.value = value
-}
-
 const handleIncrease = () =>{
     if(amount.value){
         amount.value = parseInt(amount.value) + 1
@@ -173,13 +169,17 @@ getData()
 </script>
 <template>
     <!-- add new sells or return -->
+    <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
+        {{message}}
+        <i>x</i>
+    </button>
     <div class="w-full p-[20px]">
         <div class="max-w-[400px] mx-auto my-[20px] border rounded-md p-[10px]">
             <!-- header -->
             <div class="flex justify-center">
                 <div class="flex items-center">
-                    <RouterLink to="/" class="flex gap-1 items-center hover:bg-red-500 hover:text-white border border-red-500 rounded-md p-2">
-                        <CloseIcon/>
+                    <RouterLink to="/warehouse" class="flex gap-1 items-center hover:bg-red-500 hover:text-white border border-red-500 rounded-md p-2">
+                        <img :src="CloseIconSVG" alt="CloseIconSVG">
                     </RouterLink>
                 </div>
                 <div class="flex w-full justify-center">
@@ -193,7 +193,7 @@ getData()
                 <div class="flex gap-1 items-center border rounded px-1">
                     <input type="text" ref="searchBox" class="outline-none min-w-[300px] w-full"
                         placeholder="جستجو در بین کالاهای موجود" @keyup="searchWord">
-                    <Search/>
+                    <img :src="SearchIconSVG" alt="SearchIconSVG">
                 </div>
                 <!-- search result -->
                 <div
@@ -223,11 +223,11 @@ getData()
                     <span>تعداد</span>
                     <div class="flex gap-1">
                         <button @click="handleIncrease" class="rounded p-2 bg-blue-500 text-white">
-                            <PlusIcon/>
+                            <img :src="PlusIconSVG" alt="PlusIconSVG">
                         </button>
                         <input type="text" class="border rounded outline-blue-300 px-1 text-center" placeholder="تعداد کالا" v-model="amount" :disabled="amount ? false : true">
                         <button @click="handleDecrease" class="rounded p-2 text-center bg-red-500 text-white">
-                            <MinusIcon/>
+                            <img :src="MinusIconSVG" alt="MinusIconSVG">
                         </button>
                     </div>
                 </div>
@@ -240,7 +240,6 @@ getData()
         </div>
     </div>
     <Loading :loading="loading"></Loading>
-    <error :errorMessage="errorMessage" :openError="openError" @update="updateOpenError"></error>
 </template>
 
 <style scoped>

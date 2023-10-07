@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref , computed } from 'vue'
 import store from './store';
-import router from './router';
+import router from './config';
 import dayjs from 'dayjs'
 import jalaliday from 'jalaliday'
 dayjs.extend(jalaliday)
