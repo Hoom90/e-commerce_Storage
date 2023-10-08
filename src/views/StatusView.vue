@@ -48,7 +48,7 @@ const initializeVariables = () =>{
 
 // Get All Balance Logs
 const getLogs = async () =>{
-    await axios.get(serverURL + "/api/balanceLogs/").then(Response =>{
+    await axios.get(serverURL + "/api/balanceHistories/").then(Response =>{
         dbData.value = Response.data
     })
     .catch(function (error) { console.log(error), loading.value = false,message.value = error})
@@ -148,7 +148,7 @@ const patchData = async (index) =>{
     axios.patch(serverURL + "/api/balanceLogs/" + id, body,
     {
         headers: {
-        'Authorization': 'Bearer ' +  sessionStorage.getItem('token'),
+        'Authorization': 'Bearer ' +  localStorage.getItem('token'),
         'Accept': 'application/json',
         'Content-Type': 'application/json'
     }
@@ -196,18 +196,19 @@ const profitCalculator = () =>{
             sample.push(dbData2.value[i].date);
         }
     }
-    // console.log(temp);
+    console.log(dbData2.value);
     temp.forEach(item =>{
         incomes = parseInt(incomes)+ parseInt(item.income)
         outcomes = parseInt(outcomes)+ parseInt(item.outcome)
         balances = parseInt(balances)+ parseInt(item.balance)
     })
+
     // console.log(incomes);
     // console.log(outcomes);
     // console.log(balances);
     // console.log(dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD'))
     // console.log(parseInt(parseInt(dayjs().calendar('jalali').locale('fa').format('DD')) / 7))
-    console.log(parseInt(30 / 7)+1)
+    // console.log(parseInt(30 / 7)+1)
     // console.log(dayjs().calendar('jalali').locale('fa').format('MM'))
     // console.log(dbData.value);
 }
@@ -309,7 +310,7 @@ getData()
           </div>
         </div>
     </main>
-    <Loading :loading="loading"></Loading>
+    <Loading v-if="loading"></Loading>
 </template>
 <style scoped>
 

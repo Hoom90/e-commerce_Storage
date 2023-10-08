@@ -1,17 +1,8 @@
 <script setup>
-import { defineProps, ref, watch, getCurrentInstance } from 'vue';
-
-const props = defineProps({
-    loading: {
-        required: true,
-    }
-});
-
-
 </script>
 <template>
     <!-- loading handle -->
-    <div v-if="loading" class="absolute top-0 left-0 w-full bg-[#fffe] z-50">
+    <div class="absolute top-0 left-0 w-full bg-[#fffe] z-50">
     <div class="h-[100vh] flex gap-[10px] text-[#49b779] items-center justify-center">
       <span class="text-[20px] font-bold">
         <svg class="rotate" width="100" height="100" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">

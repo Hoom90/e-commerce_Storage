@@ -28,9 +28,14 @@ const getData = async() => {
 
 // Get All Balance Logs
 const getAccountancyData = async() =>{
-  axios.get(serverURL + '/api/balanceLogs/' + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
+  await axios.get(serverURL + '/api/balanceHistories/' + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
     (res)=>{
-      dbAccountData.value = res.data
+        if(res.data.length != 0){
+            dbAccountData.value = res.data
+        }
+        else{
+            dbAccountData.value = null
+        }
     }
   )
   .catch(function (error) { console.log(error),loading.value = false,message.value = error})
@@ -38,9 +43,14 @@ const getAccountancyData = async() =>{
 
 // Get All Item Logs
 const getWarehouseData = async() =>{
-    axios.get(serverURL + "/api/itemLogs/" + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
+    await axios.get(serverURL + "/api/itemLogs/" + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
     (res)=>{
-        dbWarehouseData.value = res.data
+        if(res.data.length != 0){
+            dbWarehouseData.value = res.data
+        }
+        else{
+            dbWarehouseData.value = null
+        }
     })
   .catch(function (error) { console.log(error),loading.value = false,message.value = error})
 }
@@ -57,7 +67,7 @@ getData()
             <i>x</i>
         </button>
         <div class="flex flex-col md:flex-row gap-1 w-[90%] text-center h-[70vh] mt-5">
-            <div class="border lg:w-3/12 min-h-[200px] max-h-[300px] lg:max-h-none">
+            <div class="border lg:w-3/12 min-h-[200px] lg:max-h-none">
                 <RouterLink to="/cashier" class="border-b grid grid-flow-col grid-cols-12 items-center hover:bg-blue-500">
                     <span class='col-span-11'>دخل و خرج امروز</span>
                     <img :src="editIconSVG" alt="editIconSVG">
@@ -74,9 +84,12 @@ getData()
                         </div>
                     </div>
                 </div>
+                <div v-if="!dbAccountData" class="h-full flex justify-center items-center">
+                    تراکنشی ندارید
+                </div>
             </div>
             
-            <div class="border lg:w-3/12  min-h-[200px] max-h-[300px] lg:max-h-none">
+            <div class="border lg:w-3/12  min-h-[200px] lg:max-h-none">
                 <RouterLink to="/warehouse/newOrder" class="border-b grid grid-flow-col grid-cols-12 items-center hover:bg-blue-500">
                     <span class='col-span-11'>فروخته شده های امروز</span>
                     <img :src="editIconSVG" alt="editIconSVG">
@@ -89,11 +102,14 @@ getData()
                         </div>
                     </div>
                 </div>
+                <div v-if="!dbWarehouseData" class="h-full flex justify-center items-center">
+                    کالایی جابه جا نشده است
+                </div>
             </div>
 
             <div class="lg:w-3/12 flex lg:flex-col justify-between gap-1">
                 
-                <div class="border min-h-[200px] max-h-[300px] lg:max-h-none">
+                <div class="border min-h-[200px] lg:max-h-none">
                     <div class="border-b items-center">سود امروز</div>
                     <!-- <span class='col-span-11'>سود امروز</span> -->
                     <!-- <button class="border-b w-full grid grid-flow-col grid-cols-12 items-center">
@@ -134,5 +150,5 @@ getData()
             </div>
         </div>
     </main>
-    <Loading :loading="loading"></Loading>
+    <Loading v-if="loading"></Loading>
 </template>

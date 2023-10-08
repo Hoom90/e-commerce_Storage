@@ -17,28 +17,31 @@ const props = defineProps({
     }
 });
 
+let name = ref(null)
+let weight = ref(null)
+let basePrice = ref(null)
+let price = ref(null)
+let profit = ref(null)
+let amount = ref(null)
+let billId = ref(null)
+let date = ref(null)
+
 const dbData = ref(props.data)
 const modal = ref(props.modal)
 const item = ref(null)
 
 const saveData = () =>{
-    let name = document.getElementById('name')
-    let weight = document.getElementById('weight')
-    let basePrice = document.getElementById('basePrice')
-    let price = document.getElementById('price')
-    let profit = document.getElementById('profit')
-    let amount = document.getElementById('amount')
-    let date = document.getElementById('year').value + '/' + document.getElementById('month').value + '/' + document.getElementById('day').value
     item.value = {
         name : name.value,
         weight: weight.value === 'null' ? "" :weight.value,
         basePrice: basePrice.value === 'null' ? "" :basePrice.value,
         price: price.value === 'null' ? "" :price.value,
-        profit: profit.value === 'null' ? "" :profit.value,
+        profit: profit.value.toString() === 'null' ? "" :profit.value.toString(),
         amount: amount.value === 'null' ? "" :amount.value,
         billId: props.billId === 'null' ? "" :props.billId,
-        date: date === 'null' ? "" :date,
+        date: date.value === 'null' ? "" :date.value,
     }
+    console.log(item.value);
     emit('set:item',item)
     handleModal()
 }
@@ -62,15 +65,23 @@ const searchWord = () => {
 }
 
 const duplicateItemData = (index) => {
-    document.getElementById('name').value = dbData.value[index].name
-    document.getElementById('weight').value = dbData.value[index].weight == 'null' ? "" : dbData.value[index].weight
-    document.getElementById('basePrice').value = dbData.value[index].basePrice == 'null' ? "" : dbData.value[index].basePrice
-    document.getElementById('price').value = dbData.value[index].price == 'null' ? "" : dbData.value[index].price
-    document.getElementById('amount').value = dbData.value[index].amount == 'null' ? "" : dbData.value[index].amount
-    document.getElementById('day').value = dbData.value[index].date == 'null' ? "" : dbData.value[index].date.split('/')[2]
-    document.getElementById('month').value = dbData.value[index].date == 'null' ? "" : dbData.value[index].date.split('/')[1]
-    document.getElementById('year').value = dbData.value[index].date == 'null' ? "" : dbData.value[index].date.split('/')[0]
-    calculator()
+    document.querySelector("input[name=profit]").classList.replace("border-red-500", "border-gray-50")
+    document.querySelector("input[name=profit]").classList.replace("border-green-500", "border-gray-50")
+    document.querySelector("input[name=profitxamount]").classList.replace("border-red-500", "border-gray-50")
+    document.querySelector("input[name=profitxamount]").classList.replace("border-green-500", "border-gray-50")
+    name.value = null
+    weight.value = null
+    basePrice.value = null
+    price.value = null
+    profit.value = null
+    amount.value = null
+    profitxamount.value = null
+    billId.value = null
+    date.value = null
+    day.value = null
+    month.value = null
+    year.value = null
+    setDuplicatedData(index)
     let length = dbData.value.length
     for (let i = 0; i < length; i++) {
         document.querySelector('button[name=item' + i + ']').classList.replace("border-blue-500", "border-gray-200")
@@ -78,72 +89,79 @@ const duplicateItemData = (index) => {
     document.querySelector('button[name=item' + index + ']').classList.replace('border-gray-200', 'border-blue-500');
 }
 
+const setDuplicatedData =(index) =>{
+    name.value = dbData.value[index].name
+    weight.value = dbData.value[index].weight == 'null' ? "" : dbData.value[index].weight
+    basePrice.value = dbData.value[index].basePrice == 'null' ? "" : dbData.value[index].basePrice
+    price.value = dbData.value[index].price == 'null' ? "" : dbData.value[index].price
+    amount.value = dbData.value[index].amount == 'null' ? "" : dbData.value[index].amount
+    billId.value= dbData.value[index].billId == 'null' ? "" : dbData.value[index].billId
+    date.value = dbData.value[index].date == 'null' ? "" : dbData.value[index].date 
+    day.value = dbData.value[index].date == 'null' ? "" : dbData.value[index].date.split('/')[2]
+    month.value = dbData.value[index].date == 'null' ? "" : dbData.value[index].date.split('/')[1]
+    year.value = dbData.value[index].date == 'null' ? "" : dbData.value[index].date.split('/')[0]
+    if(price.value != null && basePrice.value != null){
+        profit.value = parseInt(price.value) - parseInt(basePrice.value)
+    }
+    if(price.value != null && basePrice.value != null && amount.value != null){
+        profitxamount.value = parseInt(profit.value) * parseInt(amount.value)
+    }
+}
+
+let day = ref(null)
+let month = ref(null)
+let year = ref(null)
+const setDate = () => {
+    date.value = year.value + '/' + month.value + '/' + day.value
+}
+
+const profitxamount = ref(null)
 const calculator = () => {
     if (price.value != null && basePrice.value != null) {
-        let input = document.getElementById("profit").classList
-        if (parseInt(price.value) - parseInt(basePrice.value) < 0) {
-            profit.value = parseInt(basePrice.value) - parseInt(price.value)
-            if (input.contains("border-gray-50")) {
-                input.replace("border-gray-50", "border-red-500")
+        profit.value = parseInt(price.value) - parseInt(basePrice.value)
+        if (parseInt(profit.value) < 0) {
+            if (document.querySelector("input[name=profit]").classList.contains("border-gray-50")) {
+                document.querySelector("input[name=profit]").classList.replace("border-gray-50", "border-red-500")
             }
             else {
-                input.replace("border-green-500", "border-red-500")
+                document.querySelector("input[name=profit]").classList.replace("border-green-500", "border-red-500")
             }
         }
-        else if(parseInt(price.value) - parseInt(basePrice.value) > 0) {
-            profit.value = parseInt(price.value) - parseInt(basePrice.value)
-            if (input.contains("border-gray-50")) {
-                input.replace("border-gray-50", "border-green-500")
+        else {
+            if (document.querySelector("input[name=profit]").classList.contains("border-gray-50")) {
+                document.querySelector("input[name=profit]").classList.replace("border-gray-50", "border-green-500")
             }
             else {
-                input.replace("border-red-500", "border-green-500")
-            }
-        }
-        else{
-            profit.value = parseInt(price.value) - parseInt(basePrice.value)
-            if (input.contains("border-green-50")) {
-                input.replace("border-green-50","border-gray-50")
-            }
-            else {
-                input.replace("border-red-500","border-gray-50")
+                document.querySelector("input[name=profit]").classList.replace("border-red-500", "border-green-500")
             }
         }
     }
     else {
-        input.replace("border-red-500", "border-gray-50")
-        input.replace("border-green-500", "border-gray-50")
+        document.querySelector("input[name=profit]").classList.replace("border-red-500", "border-gray-50")
+        document.querySelector("input[name=profit]").classList.replace("border-green-500", "border-gray-50")
     }
     if (price.value != null && basePrice.value != null && amount.value != null) {
         profitxamount.value = parseInt(profit.value) * parseInt(amount.value)
-        let input = document.getElementById("profitxamount").classList
-        if (parseInt(profit.value) * parseInt(amount.value) < 0) {
-            if (input.contains("border-gray-50")) {
-                input.replace("border-gray-50", "border-red-500")
+        if (parseInt(profitxamount.value) < 0) {
+            if (document.querySelector("input[name=profitxamount]").classList.contains("border-gray-50")) {
+                document.querySelector("input[name=profitxamount]").classList.replace("border-gray-50", "border-red-500")
             }
             else {
-                input.replace("border-green-500", "border-red-500")
+                document.querySelector("input[name=profitxamount]").classList.replace("border-green-500", "border-red-500")
             }
         }
-        else if(parseInt(profit.value) * parseInt(amount.value) > 0) {
-            if (input.contains("border-gray-50")) {
-                input.replace("border-gray-50", "border-green-500")
+        else {
+            if (document.querySelector("input[name=profitxamount]").classList.contains("border-gray-50")) {
+                document.querySelector("input[name=profitxamount]").classList.replace("border-gray-50", "border-green-500")
             }
             else {
-                input.replace("border-red-500", "border-green-500")
-            }
-        }
-        else{
-            if (input.contains("border-green-500")) {
-                input.replace("border-green-500","border-gray-50")
-            }
-            else {
-                input.replace("border-red-500","border-gray-50")
+                document.querySelector("input[name=profitxamount]").classList.replace("border-red-500", "border-green-500")
             }
         }
     }
     else {
-        input.replace("border-red-500", "border-gray-50")
-        input.replace("border-green-500", "border-gray-50")
+        document.querySelector("input[name=profitxamount]").classList.replace("border-red-500", "border-gray-50")
+        document.querySelector("input[name=profitxamount]").classList.replace("border-green-500", "border-gray-50")
     }
 }
 
@@ -174,7 +192,7 @@ const handleModal = () =>{
                 <!-- search result -->
                 <div
                     class="w-full grid overflow-y-scroll max-h-[300px]">
-                    <button class="border border-gray-200 hover:bg-[#c9c9c9] odd:bg-[#f6f6f6]" v-for="(item, index) in dbData"
+                    <button class="border border-gray-200 hover:bg-[#c9c9c9] odd:bg-[#f6f6f6]" v-for="(item, index) in dbData" v-bind:key="index"
                         @click="duplicateItemData(index)" :name="'item' + index" id="itemData">
                         <div class='flex justify-between gap-1 p-[10px] text-[12px] truncate'>
                             <span>{{ item.name }}</span>
@@ -188,44 +206,44 @@ const handleModal = () =>{
                 <p>
                     <span>نام</span><span class="text-red-500">*</span>
                 </p>
-                <input type="text" class="border rounded outline-none px-1" placeholder="نام کالا" id="name">
+                <input type="text" class="border rounded outline-none px-1" placeholder="نام کالا" v-model="name">
             </div>
             <div class="md:grid grid-flow-col grid-cols-5 gap-1">
                 <div class="flex flex-col col-span-2" @keyup="calculator">
                     <span>قیمت خرید</span>
-                    <input type="text" class="border rounded outline-none px-1 text-center" placeholder="قیمت خرید فی کالا" id="basePrice">
+                    <input type="text" class="border rounded outline-none px-1 text-center" placeholder="قیمت خرید فی کالا" v-model="basePrice">
                 </div>
                 <div class="flex flex-col col-span-2" @keyup="calculator">
                     <span>قیمت فروش</span>
-                    <input type="text" class="border rounded outline-none px-1 text-center" placeholder="قیمت فروش فی کالا" id="price">
+                    <input type="text" class="border rounded outline-none px-1 text-center" placeholder="قیمت فروش فی کالا" v-model="price">
                 </div>
                 <div class="flex flex-col">
                     <span>سود</span>
-                    <input type="text" class="border border-gray-50 rounded-md outline-none px-1 text-center" placeholder="سود فی کالا" id="profit" disabled>
+                    <input type="text" class="border border-gray-50 rounded-md outline-none px-1 text-center" placeholder="سود فی کالا" name="profit" v-model="profit" disabled>
                 </div>
             </div>
             <div class="md:grid grid-flow-col grid-cols-5 gap-1">
                 <div class="flex flex-col col-span-2">
                     <span>وزن</span>
-                    <input type="text" class="border rounded outline-none px-1 text-center" placeholder="وزن فی کالا" id="weight">
+                    <input type="text" class="border rounded outline-none px-1 text-center" placeholder="وزن فی کالا" v-model="weight">
                 </div>
                 <div class="flex flex-col col-span-2" @keyup="calculator">
                     <span>تعداد</span>
                     <input type="text" class="border rounded outline-none px-1 text-center" placeholder="تعداد کالا"
-                        id="amount">
+                        v-model="amount">
                 </div>
                 <div class="flex flex-col">
                     <span>سود در تعداد</span>
-                    <input type="text" class="border border-gray-50 rounded-md outline-none px-1 text-center" placeholder="سود محموله" id="profitxamount" disabled>
+                    <input type="text" class="border border-gray-50 rounded-md outline-none px-1 text-center" placeholder="سود محموله" name="profitxamount" v-model="profitxamount" disabled>
                 </div>
             </div>
             <div class="grid grid-cols-5 gap-1">
                 <div>
                     <span>تاریخ</span>
                     <div class="border rounded px-1 text-center flex items-center" @keyup="setDate">
-                        <input type="text" class="w-full outline-none text-center" placeholder="روز" id="day">/
-                        <input type="text" class="w-full outline-none text-center" placeholder="ماه" id="month">/
-                        <input type="text" class="w-full outline-none text-center" placeholder="سال" id="year">
+                        <input type="text" class="w-full outline-none text-center" placeholder="روز" v-model="day">/
+                        <input type="text" class="w-full outline-none text-center" placeholder="ماه" v-model="month">/
+                        <input type="text" class="w-full outline-none text-center" placeholder="سال" v-model="year">
                     </div>
                 </div>
             </div>

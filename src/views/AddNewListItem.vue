@@ -4,7 +4,6 @@ import ArrowIconSVG from '../assets/arrowLeftIcon.svg'
 import RemoveIconSVG from '../assets/removeIcon.svg'
 import Loading from '../components/loading.vue'
 import serverURL from '../config/serverAddress'
-import error from '../components/error.vue'
 import AddNewItem from '../components/addNewItem.vue'
 import router from '../config'
 import axios from 'axios'
@@ -15,15 +14,14 @@ const profits = ref(0)
 
 const dbData = ref(null)
 const loading = ref(false)
-const openError = ref(false)
-const errorMessage = ref(null)
+const message = ref(null)
 const billData = ref([])
 const modal = ref(false)
 
 // Get All Data
 const getData = async()=> {
     loading.value = true
-    axios.get(serverURL + "/api/itemTransaction/")
+    await axios.get(serverURL + "/api/itemTransaction/")
     .then((res)=>{
         dbData.value = res.data;
     })
@@ -35,6 +33,7 @@ const getData = async()=> {
     )
 }
 
+// Customed POST
 const postData = async () => {
     loading.value = true
     let fail = false
@@ -52,13 +51,14 @@ const postData = async () => {
             method: "POST",
             body: formData,
             headers: {
-                'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
+                'Authorization': 'Bearer ' + localStorage.getItem('token'),
             }
         })
             .then((res) => {
                 if (!res.ok) {
+                    console.log(res.statusText);
+                    message.value = res.statusText
                     loading.value = false
-                    message.value = res
                     fail = true
                 }
             })
@@ -154,7 +154,7 @@ getData()
         </div>
     </div>
     <AddNewItem v-if="modal" :modal="modal" :data="dbData" :billId="billInfo" @update:modal="updateModal" @set:item="updateItem"></AddNewItem>
-    <Loading :loading="loading"></Loading>
+    <Loading v-if="loading"></Loading>
 </template>
 <style scoped>
 input{

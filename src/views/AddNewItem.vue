@@ -3,7 +3,6 @@ import ArrowIconSVG from '../assets/arrowLeftIcon.svg'
 import SearchIconSVG from '../assets/searchIcon.svg'
 import { ref } from 'vue'
 import Loading from '../components/loading.vue'
-import error from '../components/error.vue'
 import serverURL from '../config/serverAddress'
 import router from '../config'
 import axios from 'axios'
@@ -19,19 +18,19 @@ let date = ref(null)
 
 const dbData = ref(null)
 const loading = ref(false)
-const openError = ref(false)
-const errorMessage = ref(null)
+const message = ref(null)
 const init = ref(true)
 
 // Get All Data
 const getData = async () => {
     loading.value = true
-    axios.get(serverURL + "/api/itemTransaction/")
+    await axios.get(serverURL + "/api/itemTransaction/")
     .then((res)=>{
         dbData.value = res.data;
     })
     .catch(function (error) {
         console.log(error);
+        message.value  = error
     })
     .finally(
         loading.value = false
@@ -50,11 +49,12 @@ const postData = async () => {
         'billId': billId.value,
         'date': date.value
     }
-    axios.post(serverURL + "/api/itemTransaction",body, {headers: {
-            'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
+    await axios.post(serverURL + "/api/itemTransaction",body, {headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token'),
         }})
-        .catch(function (error) {
+        .catch((error) => {
         console.log(error);
+        message.value = error
     }).finally(
         loading.value = false,
         router.push('/warehouse')
@@ -87,6 +87,10 @@ const setDate = () => {
 }
 
 const duplicateItemData = (index) => {
+    document.querySelector("input[name=profit]").classList.replace("border-red-500", "border-gray-50")
+    document.querySelector("input[name=profit]").classList.replace("border-green-500", "border-gray-50")
+    document.querySelector("input[name=profitxamount]").classList.replace("border-red-500", "border-gray-50")
+    document.querySelector("input[name=profitxamount]").classList.replace("border-green-500", "border-gray-50")
     name.value = null
     weight.value = null
     basePrice.value = null
@@ -130,7 +134,7 @@ const profitxamount = ref(null)
 const calculator = () => {
     if (price.value != null && basePrice.value != null) {
         profit.value = parseInt(price.value) - parseInt(basePrice.value)
-        if (parseInt(profitxamount.value) < 0) {
+        if (parseInt(profit.value) < 0) {
             if (document.querySelector("input[name=profit]").classList.contains("border-gray-50")) {
                 document.querySelector("input[name=profit]").classList.replace("border-gray-50", "border-red-500")
             }
@@ -176,20 +180,16 @@ const calculator = () => {
     }
 }
 
-const updateOpenError = (value) => {
-    openError.value = value
-}
-
 getData()
 </script>
 <template>
     <!-- single add -->
-    <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
+    <div class="w-full p-[20px] relative">
+    <button class="absolute w-[97%] flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
         {{message}}
         <i>x</i>
     </button>
-    <div class="w-full p-[20px]">
-        <div class="max-w-[800px] mx-auto my-[20px] border rounded-md p-[10px]">
+        <div class="max-w-[800px] mx-auto mt-[20px] border rounded-md p-[10px]">
             <!-- header -->
             <div class="flex justify-center">
                 <div class="flex items-center">
@@ -213,7 +213,7 @@ getData()
                 </div>
                 <!-- search result -->
                 <div
-                    class="w-full grid overflow-y-scroll max-h-[300px]">
+                    class="w-full grid overflow-y-scroll max-h-[80px]">
                     <button class="border border-gray-200 hover:bg-[#c9c9c9] odd:bg-[#f6f6f6]" v-for="(item, index) in dbData"
                         @click="duplicateItemData(index)" :name="'item' + index" id="itemData" v-bind:key='index'>
                         <div class='flex justify-between gap-1 p-[10px] text-[12px] truncate'>
@@ -292,8 +292,7 @@ getData()
             </div>
         </div>
     </div>
-    <Loading :loading="loading"></Loading>
-    <error :errorMessage="errorMessage" :openError="openError" @update="updateOpenError"></error>
+    <Loading v-if="loading"></Loading>
 </template>
 
 <style scoped>

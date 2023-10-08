@@ -39,17 +39,40 @@ const getData = async() => {
 const getBalance = async () =>{
     await axios.get(serverURL + "/api/balanceTransaction/"+ dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
       (res)=>{
-          if(res.data.length != 0) balanceData.value = res.data[res.data.length-1]
+        balanceData.value = res.data
+        calculateBalance()
       }
     )
     .catch(function (error) { console.log(error),loading.value = false,message.value=error})
 }
 
+const calculateBalance = () =>{
+    let income = 0 , outcome = 0 ,balance=0
+    balanceData.value.forEach(item => {
+        income += parseInt( item.income)
+        outcome += parseInt( item.outcome)
+    });
+    if(parseInt(outcome) < 0){
+        balance = parseInt(income) + parseInt(outcome)
+    }
+    else{
+        balance = parseInt(income) - parseInt(outcome)
+    }
+    balanceData.value = {
+        income,
+        outcome,
+        balance,
+        'date' : dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
+    }
+}
+
 // Get All Logs
 const getBalanceLogs = async () =>{
-    axios.get(serverURL + '/api/balanceLogs/' + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
+    await axios.get(serverURL + '/api/balanceHistories/' + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
         (res)=>{
-            transactionData.value = res.data
+            if(res.data.length != 0){
+                transactionData.value = res.data
+            }
       }
     )
     .catch((error) =>{ console.log(error),loading.value = false,message.value = error})
@@ -59,36 +82,20 @@ const getBalanceLogs = async () =>{
 const postOutcome = async() => {
     message.value = null
     loading.value = true;
-    let income = balanceData.value.income ? balanceData.value.income : '0'
-    let outcome = balanceData.value.outcome ? (parseInt(balanceData.value.outcome) + parseInt(cost.value)).toString() : cost.value
-    let balance = '0'
-    if(balanceData.value.balance){
-        if(parseInt(balanceData.value.balance) - parseInt(cost.value) < 0){
-            message.value = "موجودی کم است!";
-            loading.value = false;
-            return
-        }
-        else{
-            balance = (parseInt(balanceData.value.balance) - parseInt(cost.value)).toString()
-        }
-    }
-    else{
-        message.value = "موجودی کم است!";
-        loading.value = false;
-        return
-    }
+    let outcome = '-' + cost.value
+    let balance = balanceData.value.balance ? (parseInt(balanceData.value.balance) - parseInt(outcome)).toString() : (-parseInt(outcome)).toString()
     let body = {
-        "income": income,
+        "income": '0',
         "outcome": outcome,
         "balance": balance,
         "personName": personName.value,
-        "cost": cost.value,
+        "cost": '-'+cost.value,
         "description": description.value,
         "date" : dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
     };
-    axios.post(serverURL + "/api/balanceTransaction/",body,{
+    await axios.post(serverURL + "/api/balanceTransaction/",body,{
         headers: {
-        'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
+        'Authorization': 'Bearer ' + localStorage.getItem('token'),
         'Accept': 'application/json',
         'Content-Type': 'application/json'
         }
@@ -117,28 +124,19 @@ const postIncome = async() =>{
     else if(cash.value == null){
         cash.value = 0
     }
-    let income = balanceData.value.balance ? 
-        (parseInt(balanceData.value.balance) + (parseInt(card.value) + parseInt(cash.value))).toString() 
-        : (parseInt(card.value) + parseInt(cash.value)).toString()
-    let outcome = balanceData.value.outcome ? balanceData.value.outcome : '0'
-    let balance = '0'
-    if(balanceData.value.balance){
-        balance = (parseInt(balanceData.value.balance) + (parseInt(card.value) + parseInt(cash.value))).toString()
-    }
-    else{
-        balance = income
-    }
+    let income = (parseInt(card.value) + parseInt(cash.value)).toString()
+    let balance = balanceData.value.balance ? (parseInt(balanceData.value.balance) + parseInt(income)).toString() : (parseInt(income)).toString()
     const body = {
         "income": income,
-        "outcome": outcome,
+        "outcome": '0',
         "balance": balance,
         "card": card.value,
         "cash": cash.value,
         "date" : dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD'),
     };
-    axios.post(serverURL + "/api/balanceTransaction/",body,{
+    await axios.post(serverURL + "/api/balanceTransaction/",body,{
         headers: {
-        'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
+        'Authorization': 'Bearer ' + localStorage.getItem('token'),
         'Accept': 'application/json',
         'Content-Type': 'application/json'
         }
@@ -161,12 +159,18 @@ const postIncome = async() =>{
 const deleteData = async (index) =>{
     loading.value = true
     let id = transactionData.value[index]._id
+    let income ='0',outcome ='0',balance ='0'
+    let cost  = transactionData.value[index].cost ? transactionData.value[index].cost : '0'
     let card = transactionData.value[index].card ? transactionData.value[index].card : '0'
     let cash = transactionData.value[index].cash ? transactionData.value[index].cash : '0'
-    let income = (parseInt(card) + parseInt(cash)).toString() == '0' ? balanceData.value.income : (parseInt(balanceData.value.income) + parseInt(card) + parseInt(cash)).toString()
-    let outcome = transactionData.value[index].cost ? transactionData.value[index].cost : '0'
-    let balance = !transactionData.value[index].card && !transactionData.value[index].cash ? (parseInt(balanceData.value.balance) + parseInt(outcome)).toString() : (parseInt(balanceData.value.balance) - parseInt(income)).toString()
-    outcome = transactionData.value[index].cost ? (parseInt(balanceData.value.outcome) - parseInt(transactionData.value[index].cost)).toString() : balanceData.value.outcome
+    if(cost === '0'){
+        income = (- parseInt(card) + parseInt(cash)).toString()
+        outcome = '0'
+    }
+    else{
+        income = '0'
+        outcome = (- parseInt(cost)).toString()
+    }
     const body = {
         income,
         outcome,
@@ -174,22 +178,26 @@ const deleteData = async (index) =>{
         "logicalDelete": "true",
         "date":dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD'),
     };
-    axios.delete(serverURL + "/api/balanceTransaction/" + id,body, {
-    headers: {
-        'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
+    await fetch(serverURL + "/api/balanceTransaction/" + id,{
+        method: "DELETE",
+        body: JSON.stringify(body),
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token'),
+            'Content-Type': 'application/json'
         }
     })
-    .catch((error) => {
-        console.log(error);
-        message.value = error
+    .then(res => {
+        if(!res.ok){
+            console.log(res.statusText);
+            loading.value = false
+            message.value = res.statusText
+        }
+        else{
+            loading.value = false,
+            document.querySelector('div[name=data'+index+']').classList.replace('grid','hidden'),
+            getData()
+        }
     })
-    .finally(
-        loading.value = false,
-        document.querySelector('div[name=data'+index+']').classList.replace('grid','hidden'),
-        getData()
-    )
 }
 
 getData()
@@ -210,7 +218,7 @@ getData()
 
             <div class="flex justify-between p-[20px]">
                 <span>درآمد امروز: {{ balanceData.income ? balanceData.income : '0' }} تومان</span>
-                <span>خرج امروز: {{ balanceData.outcome ? balanceData.outcome : '0' }} تومان</span>
+                <span>خرج امروز: {{ balanceData.outcome ? (balanceData.outcome * -1) : '0' }} تومان</span>
                 <span>موجودی امروز: {{ balanceData.balance ? balanceData.balance : '0' }} تومان</span>
             </div>
 
@@ -226,8 +234,8 @@ getData()
                     <div v-if="transactionData != null" class="overflow-y-auto">
                       <div v-for="(data,index) in transactionData" class="grid grid-flow-col grid-cols-12 border-b odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" :name="'data'+index" v-bind:key="index">
                           <div class="flex justify-center items-center text-[12px] truncate col-span-4 p-2 px-3">{{ data.personName ? data.personName : "شما" }}</div>
-                          <div class="border-r flex justify-center items-center text-[12px] truncate col-span-3 p-2 px-3" dir='ltr'>{{ data.cost ? "- " + data.cost.toLocaleString() : "+ " + (parseInt(data.cash) + parseInt(data.card))  }} تومان</div>
-                          <div class="border-r flex justify-center items-center text-[12px] truncate col-span-4 p-2 px-3">{{ data.description ? data.description : 'نقدی و کارتی' }}</div>
+                          <div class="border-r flex justify-center items-center text-[12px] truncate col-span-3 p-2 px-3" dir='ltr'>{{ data.cost ? data.cost : (parseInt(data.cash) + parseInt(data.card))  }} تومان</div>
+                          <div class="border-r flex justify-center items-center text-[12px] truncate col-span-4 p-2 px-3">{{ data.description ? data.description : (parseInt(data.cash) + parseInt(data.card) < 0 ? 'عودت کالا' : 'نقدی و کارتی') }}</div>
                           <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">
                               <button class="bg-red-500 p-1 rounded-md text-white hover:bg-red-600 shadow-lg hover:shadow-none" @click="deleteData(index)">
                                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.207 6.207a1 1 0 0 0-1.414-1.414L12 10.586 6.207 4.793a1 1 0 0 0-1.414 1.414L10.586 12l-5.793 5.793a1 1 0 1 0 1.414 1.414L12 13.414l5.793 5.793a1 1 0 0 0 1.414-1.414L13.414 12l5.793-5.793z" fill="#ffffff"/></svg>
@@ -254,7 +262,21 @@ getData()
                 </div>
             </div>
             <!-- footer -->
-            <div class="bg-white w-full h-[10vh] grid grid-cols-1 md:grid-cols-4 justify-center items-center gap-4 px-[20px]">
+            <div class="hidden bg-white w-full h-[10vh] md:grid grid-cols-1 md:grid-cols-3 justify-center items-center gap-4 px-[20px]">
+                <div class="flex items-center justify-between gap-1 w-full col-span-1">
+                    <span>کارتخوان:</span>
+                    <input type="text" maxlength="15" class="border rounded-md h-[30px] w-4/5 px-2 outline-none" placeholder="0" dir="ltr" v-model="card"> تومان
+                </div>
+                <div class="flex items-center justify-between gap-1 w-full col-span-1">
+                    <span>نقدی:</span>
+                    <input type="text" maxlength="15" class="border rounded-md h-[30px] w-4/5 px-2 outline-none" placeholder="0" dir="ltr" v-model="cash"> تومان
+                </div>
+                <div class="col-span-1 w-full">
+                    <button class="bg-blue-500 text-white p-1 px-3 rounded-md w-full lg:w-fit hover:bg-blue-600 shadow-md hover:shadow-none" @click="postIncome">لحاظ تغییرات</button>
+                </div>
+            </div>
+            <!-- footer -->
+            <div class="bg-white w-full md:hidden fixed bottom-[20px] grid grid-cols-1 md:grid-cols-4 justify-center items-center gap-4 px-[20px]">
                 <div class="flex items-center justify-between gap-1 w-full col-span-1">
                     <span>کارتخوان:</span>
                     <input type="text" maxlength="15" class="border rounded-md h-[30px] w-4/5 px-2 outline-none" placeholder="0" dir="ltr" v-model="card"> تومان
@@ -269,5 +291,5 @@ getData()
             </div>
         </div>
     </main>
-    <Loading :loading="loading"></Loading>
+    <Loading v-if="loading"></Loading>
 </template>

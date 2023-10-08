@@ -1,7 +1,6 @@
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import Loading from '../components/loading.vue'
-import error from '../components/error.vue'
 import serverURL from '../config/serverAddress'
 import ArrowIconSVG from '../assets/arrowLeftIcon.svg'
 import router from '../config'
@@ -26,12 +25,16 @@ const loading = ref(false)
 const openError = ref(false)
 const errorMessage = ref(null)
 
+onMounted(()=>{
+    getData()
+})
+
 // Get One by Id
 const getData = async()=> {
     loading.value = true
-    axios.get(serverURL + "/api/itemTransaction/" + route.currentRoute.value.params.id)
+    await axios.get(serverURL + "/api/itemTransaction/" + route.currentRoute.value.params.id)
         .then((res)=>{
-        dbData.value = res.data;
+            dbData.value = res.data;
     })
     .catch((error) => {
         console.log(error);
@@ -64,10 +67,9 @@ const patchData  = async() =>{
         'date': date,
         'update' : dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD'),
     }
-    axios.patch(serverURL + "/api/itemTransaction/" + route.currentRoute.value.params.id,body,
-    {
+    await axios.patch(serverURL + "/api/itemTransaction/" + route.currentRoute.value.params.id, body, {
         headers: {
-            'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
+            'Authorization': 'Bearer ' + localStorage.getItem('token'),
         }
     })
     .catch((error) => {
@@ -80,27 +82,32 @@ const patchData  = async() =>{
     )
 }
 
+// customed DELETE
 const deleteData  = async() =>{
     loading.value = true
     const body = {
         'logicalDelete': "true",
         'date': dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
     }
-    axios.delete(serverURL + "/api/itemTransaction/" + route.currentRoute.value.params.id, body, {
+    await fetch (serverURL + "/api/itemTransaction/" + route.currentRoute.value.params.id,{
+        method: "DELETE",
+        body: JSON.stringify(body),
         headers: {
-            'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
+            'Authorization': 'Bearer ' + localStorage.getItem('token'),
+            "Content-Type": "application/json",
         }
     })
-    .catch((error) =>{
-        console.log(error);
-        loading.value = false
-        message.value = error
+    .then(res => {
+        if(!res.ok){
+            console.log(res.statusText);
+            loading.value = false
+            message.value = res.statusText
+        }
+        else{
+            loading.value = false,
+            router.push('/warehouse')
+        }
     })
-    .finally(
-        loading.value = false,
-        router.push('/warehouse')
-    )
-        
 }
 
 const calculator = () =>{
@@ -160,8 +167,12 @@ getData()
 </script>
 <template>
     <!-- edit -->
-    <div class="w-full p-[20px]">
-        <div class="max-w-[800px] mx-auto my-[20px] border rounded-md p-[10px]">
+    <div class="w-full p-[20px] relative">
+        <button class="absolute w-[97%] flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
+            {{message}}
+            <i>x</i>
+        </button>
+        <div class="max-w-[800px] mx-auto my-[20px] border rounded-md p-[10px] ">
 
             <div class="flex justify-center">
                 <div class="flex items-center">
@@ -238,7 +249,9 @@ getData()
                 class="border bg-blue-500 hover:bg-blue-600 order-1 md:order-2 text-white p-1 w-full lg:w-[200px] rounded">ذخیره</button>
         </div>
     </div>
-</div></template>
+</div>
+<Loading v-if="loading"></Loading>
+</template>
 <style scoped>
 input{
     padding: 5px;

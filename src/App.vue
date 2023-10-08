@@ -40,7 +40,7 @@ const handleLogout = () =>{
   </div>
   <div class="overflow-hidden" v-else>
 
-    <div class="fixed top-0 bg-[#49b779] w-full h-[10svh] border-b flex justify-between items-center gap-5 px-[20px]">      
+    <div class="fixed top-0 bg-slate-50 w-full h-[10svh] shadow-[0px_3px_5px_#c9c9c9] flex justify-between items-center gap-5 px-[20px]">      
       <div class="md:hidden">
         <button @click="handleDropdown" class="p-2 border rounded">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -58,13 +58,13 @@ const handleLogout = () =>{
         دفتر حسابها
       <div class="flex items-center gap-4">
         <span>{{ dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD') }}</span>
-        <button class="bg-white rounded p-1 px-2 hover:bg-gray-100" @click="handleLogout">خروج</button>
+        <button class="bg-white border border-red-500 rounded p-1 px-2 hover:bg-red-500 hover:text-white" @click="handleLogout">خروج</button>
       </div>
     </div>
 
     <div class="mt-[10svh] w-full flex h-[90svh]">
-      <div class="bg-white h-full shadow-[0px_10px_10px_#c9c9c9] z-10 flex flex-col">
-        <div class="hidden md:flex bg-white h-full flex-col">
+      <div class="bg-white h-full shadow-[0px_3px_3px_#c9c9c9] z-10 flex flex-col">
+        <div class="hidden md:flex bg-slate-50 h-full flex-col">
           <RouterLink to="/" active-class="bg-blue-500" class="p-2 px-3 border-b hover:bg-blue-600 text-center">میزکار</RouterLink>
           <RouterLink to="/warehouse" active-class="bg-blue-500" class="p-2 px-3 border-b hover:bg-blue-600 text-center">ثبت کالا</RouterLink>
           <RouterLink to="/cashier" active-class="bg-blue-500" class="p-2 px-3 border-b hover:bg-blue-600 text-center">صندوق</RouterLink>

@@ -5,7 +5,6 @@ import SearchIconSVG from '../assets/searchIcon.svg'
 import PlusIconSVG from '../assets/addIcon.svg'
 import MinusIconSVG from '../assets/reduceIcon.svg'
 import Loading from '../components/loading.vue'
-import error from '../components/error.vue'
 import serverURL from '../config/serverAddress'
 import router from '../config'
 import axios from 'axios'
@@ -23,8 +22,8 @@ let amount = ref(null)
 let type = ref(null)
 const getData = async () => {
     loading.value = true
-    getDBData()
-    getBalanceData()
+    await getDBData()
+    await getBalanceData()
     loading.value = false
 }
 
@@ -46,7 +45,14 @@ const getBalanceData = async() =>{
     balanceData.value = null
     await axios.get(serverURL + "/api/balanceTransaction/" + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD'))
     .then((Response)=>{
-        balanceData.value = Response.data[0]
+        if(Response.data.length !=0 ){
+            balanceData.value = Response.data[0]
+        }
+        else{
+            balanceData.value = {
+                'balance': null,
+            }
+        }
     })
     .catch(function (error) {
         console.log(error);
@@ -56,7 +62,7 @@ const getBalanceData = async() =>{
 }
 
 const putData = async () => {
-    // loading.value = true
+    loading.value = true
     let id , price , body , dbAmount;
     if(!amount.value)return;
     dbData.value.forEach(item => {
@@ -66,43 +72,10 @@ const putData = async () => {
             dbAmount = item.amount
         }
     });
-    let income = balanceData.value.income
-    let outcome = balanceData.value.outcome
-    let balance = balanceData.value.balance
-    let tempVal = parseInt(price) * (parseInt(amount.value) - parseInt(dbAmount))
-    if(tempVal < 0){
-        tempVal = tempVal * -1
-        income = (parseInt(income) + parseInt(tempVal)).toString()
-        balance = (parseInt(balance) + parseInt(tempVal)).toString()
-        if(outcome > 0){
-            outcome = (parseInt(outcome) - parseInt(tempVal)).toString()
-        }
-        else{
-            outcome = outcome
-        }
-    }
-    else if(tempVal > 0){
-        if(parseInt(balance) - parseInt(tempVal) > 0){
-            income = (parseInt(income) - parseInt(tempVal)).toString()
-            balance = (parseInt(balance) - parseInt(tempVal)).toString()
-            if(outcome > 0){
-                outcome = (parseInt(outcome) + parseInt(tempVal)).toString()
-            }
-            else{
-                outcome = outcome
-            }
-        }
-        else{
-            console.log('low budget');
-            // low budget
-            return
-        }
-    }
-    else{
-        income = income
-        outcome = outcome
-        balance = balance
-    }
+    let income = parseInt(price) * parseInt(amount.value)
+    let outcome = '0'
+    let balance = balanceData.value.balance ? (parseInt(balanceData.value.balance) + (income)).toString() : (income).toString()
+    amount.value = dbAmount - amount.value
     body = {
         'income': income,
         'outcome': outcome,
@@ -110,9 +83,8 @@ const putData = async () => {
         'amount': amount.value.toString(),
         'date': dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
     }
-    // console.log(body);
-    axios.put(serverURL + "/api/itemTransaction/" + id, body,{headers: {
-        'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
+    await axios.put(serverURL + "/api/itemTransaction/" + id, body,{headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('token'),
     }})
     .catch((error) => {
         console.log(error);
@@ -143,7 +115,8 @@ const searchWord = () => {
 
 const handleClickData = (index) => {
     name.value = dbData.value[index].name
-    amount.value = dbData.value[index].amount
+    // amount.value = dbData.value[index].amount
+    amount.value = '0'
     let length = dbData.value.length
     for (let i = 0; i < length; i++) {
         document.querySelector('button[name=item' + i + ']').classList.replace("border-blue-500", "border-gray-200")
@@ -169,11 +142,11 @@ getData()
 </script>
 <template>
     <!-- add new sells or return -->
+    <div class="w-full p-[20px] relative">
     <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
         {{message}}
         <i>x</i>
     </button>
-    <div class="w-full p-[20px]">
         <div class="max-w-[400px] mx-auto my-[20px] border rounded-md p-[10px]">
             <!-- header -->
             <div class="flex justify-center">
@@ -239,7 +212,7 @@ getData()
             </div>
         </div>
     </div>
-    <Loading :loading="loading"></Loading>
+    <Loading v-if="loading"></Loading>
 </template>
 
 <style scoped>

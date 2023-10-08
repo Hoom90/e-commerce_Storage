@@ -17,24 +17,24 @@ class AuthService {
     })
       .then((res) => {
         if (!res.ok) {
-          if (res.status === 404) {
-            throw new Error("Username or Password Not Correct!");
+          if (res.status == 404 || res.status == 401) {
+            throw new Error("رمز عبور یا نام کاربری صحیح نمیباشد.");
           } else {
-            throw new Error("An error has occurred. Please try again later.");
+            throw new Error("مشکلی پیش اومد. دوباره سعی کنید.");
           }
         }
         return res.json();
       })
       .then((data) => {
         if (data.token) {
-          sessionStorage.setItem("token", data.token);
+          localStorage.setItem("token", data.token);
         }
         return data;
       });
   }
 
   logout() {
-    sessionStorage.clear();
+    localStorage.clear();
   }
 }
 
