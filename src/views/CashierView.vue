@@ -25,14 +25,14 @@ let cash = ref(null)
 const getData = async() => {
     balanceData.value = {
         'income':null,
-    'outcome':null,
-    'balance':null
-  }
-  transactionData.value = null
-  loading.value = true
-  await getBalance()
-  await getBalanceLogs()
-  loading.value = false
+        'outcome':null,
+        'balance':null
+    }
+    transactionData.value = null
+    loading.value = true
+    await getBalance()
+    await getBalanceLogs()
+    loading.value = false
 }
 
 // Get Last Balance
@@ -89,7 +89,7 @@ const postOutcome = async() => {
         "outcome": outcome,
         "balance": balance,
         "personName": personName.value,
-        "cost": '-'+cost.value,
+        "cost": '-' + cost.value,
         "description": description.value,
         "date" : dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
     };
@@ -132,6 +132,7 @@ const postIncome = async() =>{
         "balance": balance,
         "card": card.value,
         "cash": cash.value,
+        'description':'واریز به صندوق',
         "date" : dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD'),
     };
     await axios.post(serverURL + "/api/balanceTransaction/",body,{
@@ -218,12 +219,12 @@ getData()
 
             <div class="flex justify-between p-[20px]">
                 <span>درآمد امروز: {{ balanceData.income ? balanceData.income : '0' }} تومان</span>
-                <span>خرج امروز: {{ balanceData.outcome ? (balanceData.outcome * -1) : '0' }} تومان</span>
-                <span>موجودی امروز: {{ balanceData.balance ? balanceData.balance : '0' }} تومان</span>
+                <span>بدهی امروز: <span dir="ltr">{{ balanceData.outcome ? (balanceData.outcome) : '0' }}</span> تومان</span>
+                <p>وضعیت دخل امروز: <span dir="ltr">{{ balanceData.balance ? balanceData.balance : '0' }}</span> تومان</p>
             </div>
 
             <!-- table -->
-            <div class="w-[90%] m-10 h-[48vh]">
+            <div class="w-[90%] md:m-5 md:mx-10 mx-auto mb-40">
                 <div class="grid grid-flow-col grid-cols-12 border-b bg-white">
                     <div class="py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-4">نام کاربر</div>
                     <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-3">هزینه ها</div>
@@ -231,11 +232,11 @@ getData()
                     <div class="border-r col-span-1"></div>
                 </div>
                 <div class="flex flex-col">
-                    <div v-if="transactionData != null" class="overflow-y-auto">
+                    <div v-if="transactionData != null" class="max-h-[500px] overflow-auto">
                       <div v-for="(data,index) in transactionData" class="grid grid-flow-col grid-cols-12 border-b odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" :name="'data'+index" v-bind:key="index">
                           <div class="flex justify-center items-center text-[12px] truncate col-span-4 p-2 px-3">{{ data.personName ? data.personName : "شما" }}</div>
                           <div class="border-r flex justify-center items-center text-[12px] truncate col-span-3 p-2 px-3" dir='ltr'>{{ data.cost ? data.cost : (parseInt(data.cash) + parseInt(data.card))  }} تومان</div>
-                          <div class="border-r flex justify-center items-center text-[12px] truncate col-span-4 p-2 px-3">{{ data.description ? data.description : (parseInt(data.cash) + parseInt(data.card) < 0 ? 'عودت کالا' : 'نقدی و کارتی') }}</div>
+                          <div class="border-r flex justify-center items-center text-[12px] truncate col-span-4 p-2 px-3">{{ data.description }}</div>
                           <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">
                               <button class="bg-red-500 p-1 rounded-md text-white hover:bg-red-600 shadow-lg hover:shadow-none" @click="deleteData(index)">
                                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.207 6.207a1 1 0 0 0-1.414-1.414L12 10.586 6.207 4.793a1 1 0 0 0-1.414 1.414L10.586 12l-5.793 5.793a1 1 0 1 0 1.414 1.414L12 13.414l5.793 5.793a1 1 0 0 0 1.414-1.414L13.414 12l5.793-5.793z" fill="#ffffff"/></svg>
@@ -276,7 +277,7 @@ getData()
                 </div>
             </div>
             <!-- footer -->
-            <div class="bg-white w-full md:hidden fixed bottom-[20px] grid grid-cols-1 md:grid-cols-4 justify-center items-center gap-4 px-[20px]">
+            <div class="bg-white w-full md:hidden fixed bottom-0 py-[20px] grid grid-cols-1 md:grid-cols-4 justify-center items-center gap-4 px-[20px]">
                 <div class="flex items-center justify-between gap-1 w-full col-span-1">
                     <span>کارتخوان:</span>
                     <input type="text" maxlength="15" class="border rounded-md h-[30px] w-4/5 px-2 outline-none" placeholder="0" dir="ltr" v-model="card"> تومان

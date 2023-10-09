@@ -7,65 +7,118 @@ import serverURL from '../config/serverAddress'
 import AddNewItem from '../components/addNewItem.vue'
 import router from '../config'
 import axios from 'axios'
+import dayjs from "dayjs";
+import jalaliday from "jalaliday";
+dayjs.extend(jalaliday);
 
 const billInfo = ref(null)
 const costs = ref(0)
 const profits = ref(0)
 
 const dbData = ref(null)
+const balanceData = ref(null);
 const loading = ref(false)
 const message = ref(null)
 const billData = ref([])
 const modal = ref(false)
 
+const getData = async () => {
+  loading.value = true;
+  await getItems();
+  await getBalance();
+  loading.value = false;
+};
+
 // Get All Data
-const getData = async()=> {
-    loading.value = true
-    await axios.get(serverURL + "/api/itemTransaction/")
-    .then((res)=>{
-        dbData.value = res.data;
+const getItems = async () => {
+  await axios
+    .get(serverURL + "/api/itemTransaction/")
+    .then((res) => {
+      dbData.value = res.data;
     })
     .catch(function (error) {
-        console.log(error);
-    })
-    .finally(
-        loading.value = false
+      console.log(error);
+      message.value = error;
+      loading.value = false;
+    });
+};
+
+// Get Last Balance
+const getBalance = async () => {
+  await axios
+    .get(
+      serverURL +
+        "/api/balanceTransaction/" +
+        dayjs().calendar("jalali").locale("fa").format("YYYY-MM-DD")
     )
-}
+    .then((res) => {
+      balanceData.value = res.data;
+      calculateBalance();
+    })
+    .catch(function (error) {
+      console.log(error), (loading.value = false), (message.value = error);
+    });
+};
+
+const calculateBalance = () => {
+  let income = 0,
+    outcome = 0,
+    balance = 0;
+  balanceData.value.forEach((item) => {
+    income += parseInt(item.income);
+    outcome += parseInt(item.outcome);
+  });
+  if (parseInt(outcome) < 0) {
+    balance = parseInt(income) + parseInt(outcome);
+  } else {
+    balance = parseInt(income) - parseInt(outcome);
+  }
+  balanceData.value = {
+    income,
+    outcome,
+    balance,
+    date: dayjs().calendar("jalali").locale("fa").format("YYYY/MM/DD"),
+  };
+};
 
 // Customed POST
 const postData = async () => {
     loading.value = true
     let fail = false
     for(let i=0;i<billData.value.length;i++){
-        const formData = new FormData()
-        formData.append('name', billData.value[i].name)
-        formData.append('weight', billData.value[i].weight)
-        formData.append('basePrice', billData.value[i].basePrice)
-        formData.append('price', billData.value[i].price)
-        formData.append('profit', billData.value[i].profit)
-        formData.append('amount', billData.value[i].amount)
-        formData.append('billId', billData.value[i].billId)
-        formData.append('date', billData.value[i].date)
-        await fetch(serverURL + "/api/itemTransaction", {
-            method: "POST",
-            body: formData,
+        const body = {
+            'income': "0",
+            'outcome': (parseInt(basePrice.value) * parseInt(amount.value)).toString(),
+            'balance': balanceData.value.balance
+            ? (parseInt(balanceData.value.balance) - parseInt(parseInt(basePrice.value) * parseInt(amount.value))).toString()
+            : (-parseInt(parseInt(basePrice.value) * parseInt(amount.value))).toString(),
+            'description': 'خرید فاکتور',
+            'name': billData.value[i].name,
+            'weight': billData.value[i].weight,
+            'basePrice': billData.value[i].basePrice,
+            'price': billData.value[i].price,
+            'profit': billData.value[i].profit,
+            'amount': billData.value[i].amount,
+            'billId': billData.value[i].billId,
+            'date': billData.value[i].date
+        }
+        await fetch(serverURL + "/api/itemTransaction",body, {
             headers: {
                 'Authorization': 'Bearer ' + localStorage.getItem('token'),
             }
         })
-            .then((res) => {
-                if (!res.ok) {
-                    console.log(res.statusText);
-                    message.value = res.statusText
-                    loading.value = false
-                    fail = true
-                }
-            })
-            if(fail){
-                break;
+        .then((res) => {
+            if (!res.ok) {
+                console.log(res.statusText);
+                message.value = res.statusText
+                loading.value = false
+                fail = true
             }
+        })
+        if(fail){
+            break;
         }
+    }
     loading.value = false
     router.push('/warehouse')
 }
@@ -85,7 +138,7 @@ const updateItem = (item)=>{
     costs.value += parseInt(item.value.basePrice)
     profits.value += parseInt(item.value.profit) * parseInt(item.value.amount)
 }
-
+T
 getData()
 </script>
 <template>

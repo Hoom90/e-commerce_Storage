@@ -12,7 +12,7 @@ class AuthService {
       method: "POST",
       body: JSON.stringify(data),
       headers: {
-        "content-type": "application/json",
+        "Content-Type": "application/json",
       },
     })
       .then((res) => {

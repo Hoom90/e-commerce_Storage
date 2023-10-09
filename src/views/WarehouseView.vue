@@ -58,7 +58,7 @@ const searchData = () => {
 getData()
 </script>
 <template>
-    <main class="flex flex-col pt-[25px] justify-center items-center">
+    <main class="flex flex-col pt-[25px] justify-center items-center relative">
         <div class="text-[24px] w-full px-5 flex items-center gap-5 justify-between">
             <span>ثبت کالا</span>
         </div>

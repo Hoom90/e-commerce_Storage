@@ -16,13 +16,16 @@ const message = ref(null)
 let dbAccountData = ref([])
 let dbWarehouseData = ref([])
 
-let personName = ref(null)
-let cost = ref(null)
-let description = ref(null)
+let profit = ref(null)
+let debt = ref(null)
+let balance = ref(null)
 const getData = async() => {
     loading.value = true
     await getAccountancyData()
     await getWarehouseData()
+    setProfit()
+    setDebt()
+    setBalance()
     loading.value = false
 }
 
@@ -55,6 +58,42 @@ const getWarehouseData = async() =>{
   .catch(function (error) { console.log(error),loading.value = false,message.value = error})
 }
 
+const setProfit = () =>{
+    profit.value =0
+    for (let i = 0; i < dbAccountData.value.length; i++) {
+        if(parseInt(dbAccountData.value[i].card) > 0){
+            profit.value = parseInt(profit.value) + parseInt(dbAccountData.value[i].card)
+        }
+        else if(parseInt(dbAccountData.value[i].cash) > 0){
+            profit.value = parseInt(profit.value) + parseInt(dbAccountData.value[i].cash)
+        }
+        else if(parseInt(dbAccountData.value[i].cost) > 0){
+            profit.value = parseInt(profit.value) + parseInt(dbAccountData.value[i].cost)
+        }
+    }     
+}
+
+const setDebt = () =>{
+    debt.value =0
+    for (let i = 0; i < dbAccountData.value.length; i++) {
+        if(parseInt(dbAccountData.value[i].card) < 0){
+            debt.value = parseInt(debt.value) - parseInt(dbAccountData.value[i].card)
+        }
+        else if(parseInt(dbAccountData.value[i].cash) < 0){
+            debt.value = parseInt(debt.value) - parseInt(dbAccountData.value[i].cash)
+        }
+        else if(parseInt(dbAccountData.value[i].cost) < 0){
+            debt.value = parseInt(debt.value) - parseInt(dbAccountData.value[i].cost)
+        }
+    }        
+    debt.value = debt.value.toString()
+}
+
+const setBalance = () =>{
+    balance.value = 0
+    balance.value = profit.value - debt.value
+}
+
 getData()
 </script>
 <template>
@@ -66,21 +105,21 @@ getData()
             {{message}}
             <i>x</i>
         </button>
-        <div class="flex flex-col md:flex-row gap-1 w-[90%] text-center h-[70vh] mt-5">
-            <div class="border lg:w-3/12 min-h-[200px] lg:max-h-none">
-                <RouterLink to="/cashier" class="border-b grid grid-flow-col grid-cols-12 items-center hover:bg-blue-500">
+        <div class="flex flex-col md:flex-row gap-4 md:gap-1 w-[90%] text-center h-[70vh] mt-5">
+            <div class="border lg:w-3/12 min-h-[200px] overflow-auto lg:max-h-none bg-white">
+                <RouterLink to="/cashier" class="border-b grid grid-flow-col grid-cols-12 items-center hover:bg-blue-500 hover:text-white">
                     <span class='col-span-11'>دخل و خرج امروز</span>
                     <img :src="editIconSVG" alt="editIconSVG">
                 </RouterLink>
                 <div class="overflow-y-auto" v-if="dbAccountData">
                     <div v-for="(data,index) in dbAccountData" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" v-bind:key='index'>
-                        <div class="grid grid-flow-col grid-cols-3 w-full p-1 border-b">
-                            <span>{{ data.personName?data.personName:"شما" }}</span>
-                            <span v-if='data.cost'>{{ data.cost }}-</span>
-                            <span v-if='data.cash || data.card'>
-                            {{ (data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0) }}+
+                        <div class="grid grid-flow-col grid-cols-5 w-full p-1 border-b">
+                            <span class="col-span-2 text-[12px] truncate">{{ data.personName ? data.personName:"شما" }}</span>
+                            <span v-if='data.cost' dir="ltr">{{ data.cost }}</span>
+                            <span v-if='data.cash || data.card' dir="ltr">
+                            {{ (data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0) }}
                             </span>
-                            <span>{{ data.description ? data.description : 'نقدی و کارت' }}</span>
+                            <span class="col-span-2 text-[12px] truncate">{{ data.description }}</span>
                         </div>
                     </div>
                 </div>
@@ -89,16 +128,16 @@ getData()
                 </div>
             </div>
             
-            <div class="border lg:w-3/12  min-h-[200px] lg:max-h-none">
-                <RouterLink to="/warehouse/newOrder" class="border-b grid grid-flow-col grid-cols-12 items-center hover:bg-blue-500">
+            <div class="border lg:w-3/12 min-h-[200px] overflow-auto lg:max-h-none bg-white">
+                <RouterLink to="/warehouse/newOrder" class="border-b grid grid-flow-col grid-cols-12 items-center hover:bg-blue-500 hover:text-white">
                     <span class='col-span-11'>فروخته شده های امروز</span>
                     <img :src="editIconSVG" alt="editIconSVG">
                 </RouterLink>
                 <div class="overflow-y-auto" v-if="dbWarehouseData">
                     <div v-for="(data,index) in dbWarehouseData" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" v-bind:key="index">
                         <div class="grid grid-flow-col grid-cols-12 w-full p-1 border-b">
-                            <span class="col-span-11">{{ data.name }}</span>
-                            <span>{{ parseInt(data.oldVal) - parseInt(data.newVal) }}</span>
+                            <span class="col-span-11">{{ data.name ? data.name : data.description }}</span>
+                            <span>{{ data.oldVal ? parseInt(data.oldVal) - parseInt(data.newVal) : '' }}</span>
                         </div>
                     </div>
                 </div>
@@ -107,46 +146,29 @@ getData()
                 </div>
             </div>
 
-            <div class="lg:w-3/12 flex lg:flex-col justify-between gap-1">
+            <div class="lg:w-3/12 flex flex-col lg:flex-col gap-1">
                 
-                <div class="border min-h-[200px] lg:max-h-none">
-                    <div class="border-b items-center">سود امروز</div>
-                    <!-- <span class='col-span-11'>سود امروز</span> -->
-                    <!-- <button class="border-b w-full grid grid-flow-col grid-cols-12 items-center">
-                        <editIconVue/>
-                    </button> -->
-                    <div class="overflow-y-auto" v-if="dbWarehouseData">
-                        <!-- <div class="grid grid-flow-col grid-cols-5 border-b bg-white">
-                            <div class="py-2 px-3 col-span-4">نام کالا</div>
-                            <div class="py-2 px-3">تعداد</div>
-                        </div> -->
-                        <!-- <div v-for="(data,index) in dbWarehouseData" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" v-bind:key="index">
-                            <div class="grid grid-flow-col grid-cols-3 w-full p-1 border-b">
-                                <span>{{ data.name }}</span>
-                                <span>{{ parseInt(data.oldVal) - parseInt(data.newVal) }}</span>
-                            </div>
-                        </div> -->
+                <div class="border" v-if="profit">
+                    <div class="border-b items-center">فروش و درآمد امروز</div>
+                    <div class="bg-[#f6f6f6] hover:bg-[#e9e9e9]">
+                        {{ profit }}
                     </div>
                 </div>
 
-                <!-- <div class="border min-h-[200px] max-h-[300px] lg:max-h-none">
-                    <button class="border-b w-full grid grid-flow-col grid-cols-12 items-center">
-                        <span class='col-span-11'>بدهی امروز</span>
-                        <editIconVue/>
-                    </button>
-                    <div class="overflow-y-auto" v-if="dbWarehouseData">
-                        <div class="grid grid-flow-col grid-cols-5 border-b bg-white">
-                            <div class="py-2 px-3 col-span-4">نام کالا</div>
-                            <div class="py-2 px-3">تعداد</div>
-                        </div>
-                        <div v-for="(data,index) in dbWarehouseData" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" v-bind:key="index">
-                            <div class="grid grid-flow-col grid-cols-3 w-full p-1 border-b">
-                                <span>{{ data.name }}</span>
-                                <span>{{ parseInt(data.oldVal) - parseInt(data.newVal) }}</span>
-                            </div>
-                        </div>
+                <div class="border" v-if="debt">
+                    <div class="border-b items-center">بدهی امروز</div>
+                    <div class="bg-[#f6f6f6] hover:bg-[#e9e9e9]">
+                        {{ debt }}
                     </div>
-                </div> -->
+                </div>
+
+                <div class="border" v-if="balance">
+                    <div class="border-b items-center">حساب امروز</div>
+                    <div class="text-white" :class="balance < 0 ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'" dir="ltr">
+                        {{ balance }}
+                    </div>
+                </div>
+
             </div>
         </div>
     </main>

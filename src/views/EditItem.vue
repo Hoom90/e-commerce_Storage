@@ -20,6 +20,7 @@ const dbData = ref({
     billId:'',
     date:'',
 })
+const balanceData = ref(null);
 const message = ref(null)
 const loading = ref(false)
 const openError = ref(false)
@@ -29,10 +30,16 @@ onMounted(()=>{
     getData()
 })
 
+const getData = async () => {
+    loading.value = true;
+  await getItem();
+  await getBalance();
+  loading.value = false;
+};
+
 // Get One by Id
-const getData = async()=> {
-    loading.value = true
-    await axios.get(serverURL + "/api/itemTransaction/" + route.currentRoute.value.params.id)
+const getItem = async () => {
+  await axios.get(serverURL + "/api/itemTransaction/" + route.currentRoute.value.params.id)
         .then((res)=>{
             dbData.value = res.data;
     })
@@ -41,10 +48,45 @@ const getData = async()=> {
         loading.value = false
         message.value = error
     })
-    .finally(
-        loading.value = false
+};
+
+// Get Last Balance
+const getBalance = async () => {
+  await axios
+    .get(
+      serverURL +
+        "/api/balanceTransaction/" +
+        dayjs().calendar("jalali").locale("fa").format("YYYY-MM-DD")
     )
-}
+    .then((res) => {
+      balanceData.value = res.data;
+      calculateBalance();
+    })
+    .catch(function (error) {
+      console.log(error), (loading.value = false), (message.value = error);
+    });
+};
+
+const calculateBalance = () => {
+  let income = 0,
+    outcome = 0,
+    balance = 0;
+  balanceData.value.forEach((item) => {
+    income += parseInt(item.income);
+    outcome += parseInt(item.outcome);
+  });
+  if (parseInt(outcome) < 0) {
+    balance = parseInt(income) + parseInt(outcome);
+  } else {
+    balance = parseInt(income) - parseInt(outcome);
+  }
+  balanceData.value = {
+    income,
+    outcome,
+    balance,
+    date: dayjs().calendar("jalali").locale("fa").format("YYYY/MM/DD"),
+  };
+};
 
 const patchData  = async() =>{
     loading.value = true
@@ -85,7 +127,13 @@ const patchData  = async() =>{
 // customed DELETE
 const deleteData  = async() =>{
     loading.value = true
+    let basePrice =  document.getElementById('basePrice')
+    let amount =  document.getElementById('amount')
     const body = {
+        'income': "0",
+        'outcome': (-(parseInt(basePrice.value) * parseInt(amount.value))).toString(),
+        'balance': (parseInt(balanceData.value.balance) + parseInt(parseInt(basePrice.value) * parseInt(amount.value))).toString(),
+        'description' : 'برگشت کالا',
         'logicalDelete': "true",
         'date': dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
     }
@@ -234,9 +282,9 @@ getData()
                 <div class="flex flex-col">
                     <span>تاریخ</span>
                     <div class="border rounded px-1 text-center flex items-center" @keyup="setDate">
-                        <input type="text" class="w-full outline-none text-center" placeholder="روز" id="day" :value="dbData.date.split('/')[2]">/
-                        <input type="text" class="w-full outline-none text-center" placeholder="ماه" id="month" :value="dbData.date.split('/')[1]">/
-                        <input type="text" class="w-full outline-none text-center" placeholder="سال" id="year" :value="dbData.date.split('/')[0]">
+                        <input type="text" class="w-full outline-none text-center" placeholder="روز" maxlength="2" id="day" :value="dbData.date.split('/')[2]">/
+                        <input type="text" class="w-full outline-none text-center" placeholder="ماه" maxlength="2" id="month" :value="dbData.date.split('/')[1]">/
+                        <input type="text" class="w-full outline-none text-center" placeholder="سال" maxlength="4" id="year" :value="dbData.date.split('/')[0]">
                     </div>
                 </div>
             </div>

@@ -80,6 +80,7 @@ const putData = async () => {
         'income': income,
         'outcome': outcome,
         'balance': balance,
+        'description' : 'فروش کالا',
         'amount': amount.value.toString(),
         'date': dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
     }

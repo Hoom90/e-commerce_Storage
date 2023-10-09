@@ -196,7 +196,7 @@ const profitCalculator = () =>{
             sample.push(dbData2.value[i].date);
         }
     }
-    console.log(dbData2.value);
+    // console.log(dbData2.value);
     temp.forEach(item =>{
         incomes = parseInt(incomes)+ parseInt(item.income)
         outcomes = parseInt(outcomes)+ parseInt(item.outcome)
@@ -265,11 +265,11 @@ getData()
                 <div class="flex justify-center items-center gap-10 border-b p-3">
                     <div class="flex gap-3">
                         <span>نقد:</span>
-                        <span>{{ balance.cash }} تومان</span>
+                        <span dir="ltr">{{ balance.cash }} تومان</span>
                     </div>
                     <div class="flex gap-3">
                         <span>کارت به کارت:</span>
-                        <span>{{ balance.card }} تومان</span>
+                        <span dir="ltr">{{ balance.card }} تومان</span>
                     </div>
                     <span class="text-red-500">{{ balance.date }}</span>
                 </div>
@@ -286,10 +286,16 @@ getData()
                     <div v-for="(data,index) in logs" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" :name="'persons' + index" v-bind:key='index'>
                         <button @click="handleLogs(index)" class="grid grid-flow-col grid-cols-3 w-full p-1 border-b">
                             <span>{{ data.personName ? data.personName : "شما" }}</span>
-                            <span v-if='data.cost'>{{ data.cost }} تومان</span>
-                            <span v-if='data.cash || data.card'>
-                            {{ (data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0) }} تومان
-                            </span>
+                            <p v-if='data.cost'>
+                                <span dir="ltr">
+                                    {{ data.cost }} تومان
+                                </span>
+                            </p>
+                            <p v-if='data.cash || data.card'>
+                                <span dir="ltr">
+                                    {{ (data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0) }} تومان
+                                </span>
+                            </p>
                             <span>{{ data.description ? data.description : 'نقدی و کارت' }}</span>
                         </button>
                         <div class="hidden gap-1 my-1 bg-white" :id="'form'+index">

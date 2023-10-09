@@ -203,18 +203,16 @@ const handleModal = () =>{
             </div>
 
             <div class="flex flex-col">
-                <p>
-                    <span>نام</span><span class="text-red-500">*</span>
-                </p>
+                <p>نام<span class="text-red-500">*</span></p>
                 <input type="text" class="border rounded outline-none px-1" placeholder="نام کالا" v-model="name">
             </div>
             <div class="md:grid grid-flow-col grid-cols-5 gap-1">
                 <div class="flex flex-col col-span-2" @keyup="calculator">
-                    <span>قیمت خرید</span>
+                    <p>قیمت خرید<span class="text-red-500">*</span></p>
                     <input type="text" class="border rounded outline-none px-1 text-center" placeholder="قیمت خرید فی کالا" v-model="basePrice">
                 </div>
                 <div class="flex flex-col col-span-2" @keyup="calculator">
-                    <span>قیمت فروش</span>
+                    <p>قیمت فروش<span class="text-red-500">*</span></p>
                     <input type="text" class="border rounded outline-none px-1 text-center" placeholder="قیمت فروش فی کالا" v-model="price">
                 </div>
                 <div class="flex flex-col">
@@ -228,7 +226,7 @@ const handleModal = () =>{
                     <input type="text" class="border rounded outline-none px-1 text-center" placeholder="وزن فی کالا" v-model="weight">
                 </div>
                 <div class="flex flex-col col-span-2" @keyup="calculator">
-                    <span>تعداد</span>
+                    <p>تعداد<span class="text-red-500">*</span></p>
                     <input type="text" class="border rounded outline-none px-1 text-center" placeholder="تعداد کالا"
                         v-model="amount">
                 </div>
