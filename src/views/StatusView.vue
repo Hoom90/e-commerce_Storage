@@ -29,10 +29,9 @@ const getData = async() => {
     initializeVariables()
     await getLogs()
     await getBalance()
-    await setBalance()
+    // await setBalance()
     await setLog()
     await setHistory()
-    profitCalculator()
     loading.value = false
 }
 
@@ -72,15 +71,15 @@ const setHistory = async() => {
     });
 }
 
-const setBalance = async()=>{
-    const sample = [];
-    await dbData2.value.forEach( item =>{
-        if (!sample.includes(item.date)) {
-            balanceData.value.push(item);
-            sample.push(item.date);
-        }
-    })
-}
+// const setBalance = async()=>{
+//     const sample = [];
+//     await dbData2.value.forEach( item =>{
+//         if (!sample.includes(item.date)) {
+//             balanceData.value.push(item);
+//             sample.push(item.date);
+//         }
+//     })
+// }
 
 const setLog = async() =>{
     await dbData.value.forEach(item => {
@@ -175,6 +174,33 @@ const handleSelectedDate = (date) =>{
             logs.value.push(item)
         }
     })
+    calculateBalance(date)
+}
+
+const calculateBalance = (date) =>{
+    let temp = []
+    dbData2.value.forEach(item => {
+        if (item.date == date) {
+            temp.push(item);
+        }
+    });
+    let income = 0 , outcome = 0 ,balance=0
+    temp.forEach(item => {
+        income += parseInt(item.income)
+        outcome += parseInt(item.outcome)
+    });
+    if(parseInt(outcome) < 0){
+        balance = parseInt(income) + parseInt(outcome)
+    }
+    else{
+        balance = parseInt(income) - parseInt(outcome)
+    }
+    balanceData.value = {
+        income,
+        outcome,
+        balance,
+        date
+    }
 }
 
 const handleLogs = (index) =>{
@@ -185,32 +211,6 @@ const handleLogs = (index) =>{
     else{
         document.getElementById("form"+index).classList.replace('grid','hidden')
     }
-}
-
-const profitCalculator = () =>{
-    let incomes = 0,outcomes=0,balances=0
-    const sample = [] , temp = [];
-    for(let i=dbData2.value.length -1 ; i >0;i--){
-        if (!sample.includes(dbData2.value[i].date)) {
-            temp.push(dbData2.value[i]);
-            sample.push(dbData2.value[i].date);
-        }
-    }
-    // console.log(dbData2.value);
-    temp.forEach(item =>{
-        incomes = parseInt(incomes)+ parseInt(item.income)
-        outcomes = parseInt(outcomes)+ parseInt(item.outcome)
-        balances = parseInt(balances)+ parseInt(item.balance)
-    })
-
-    // console.log(incomes);
-    // console.log(outcomes);
-    // console.log(balances);
-    // console.log(dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD'))
-    // console.log(parseInt(parseInt(dayjs().calendar('jalali').locale('fa').format('DD')) / 7))
-    // console.log(parseInt(30 / 7)+1)
-    // console.log(dayjs().calendar('jalali').locale('fa').format('MM'))
-    // console.log(dbData.value);
 }
 
 getData()
@@ -229,26 +229,8 @@ getData()
         </button>
         <div class='grid grid-flow-col grid-cols-6 gap-1 w-full px-[20px] h-[75vh]'>
 
-          <!-- profits -->
-          <div :class="logs ? 'col-span-1 overflow-y-auto border h-full' : 'col-span-1 overflow-y-auto border h-full'">
-            <!-- week -->
-            <div class="border-b bg-white py-2 px-3 flex justify-center items-center truncate">
-            سود این هفته
-            </div>
-            <div class="border-b bg-gray-100 hover:bg-gray-200 py-2 px-3 flex justify-center items-center truncate" id='weekProfitDataContainer'>
-            {{ weekProfit ? weekProfit : '0'}}
-            </div>
-            <!-- month -->
-            <div class="border-b bg-white py-2 px-3 flex justify-center items-center truncate">
-            سود این ماه
-            </div>
-            <div class="border-b bg-gray-100 hover:bg-gray-200 py-2 px-3 flex justify-center items-center truncate" id='monthProfitDataContainer'>
-            {{ monthProfit ? monthProfit : '0' }}
-            </div> 
-          </div>
-
           <!-- closed accounts -->
-          <div :class="logs ? 'col-span-1 overflow-y-auto border h-full' : 'col-span-5 overflow-y-auto border h-full'">
+          <div :class="logs ? 'col-span-1 overflow-y-auto border h-full' : 'col-span-6 overflow-y-auto border h-full'">
               <div class="border-b bg-white">
                   <div class="py-2 px-3 flex justify-center items-center truncate">تاریخ</div>
               </div>
@@ -260,18 +242,17 @@ getData()
           </div>
 
           <!-- table -->
-          <div :class="logs ? 'col-span-4 h-full border' : ''" v-if="logs">
+          <div :class="logs ? 'col-span-5 h-full border' : ''" v-if="logs">
             <div v-if="balance" class="flex flex-col">
                 <div class="flex justify-center items-center gap-10 border-b p-3">
-                    <div class="flex gap-3">
-                        <span>نقد:</span>
-                        <span dir="ltr">{{ balance.cash }} تومان</span>
-                    </div>
-                    <div class="flex gap-3">
-                        <span>کارت به کارت:</span>
-                        <span dir="ltr">{{ balance.card }} تومان</span>
-                    </div>
-                    <span class="text-red-500">{{ balance.date }}</span>
+                    <p>نقد: <span dir="ltr">{{ balance.cash }}</span><span> تومان</span></p>
+                    <p>کارت به کارت:<span dir="ltr">{{ balance.card }}</span><span> تومان</span></p>
+                    <p class="text-red-500">{{ balance.date }}</p>
+                </div>
+                <div class="flex flex-col md:flex-row justify-center items-center gap-10 p-[20px]">
+                    <p>درآمد امروز: {{ balanceData.income ? balanceData.income : '0' }} تومان</p>
+                    <p>بدهی امروز: <span dir="ltr">{{ balanceData.outcome ? (balanceData.outcome) : '0' }}</span> تومان</p>
+                    <p>وضعیت دخل امروز: <span dir="ltr">{{ balanceData.balance ? balanceData.balance : '0' }}</span> تومان</p>
                 </div>
             </div>
             <div class="h-[90%]"> 
@@ -284,21 +265,39 @@ getData()
                 <!-- body -->
                 <div id="table">
                     <div v-for="(data,index) in logs" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" :name="'persons' + index" v-bind:key='index'>
-                        <button @click="handleLogs(index)" class="grid grid-flow-col grid-cols-3 w-full p-1 border-b">
+                        <!-- <button @click="handleLogs(index)" class="grid grid-flow-col grid-cols-3 w-full p-1 border-b">
                             <span>{{ data.personName ? data.personName : "شما" }}</span>
-                            <p v-if='data.cost'>
+                            <p v-if='data.cost' class="flex gap-3 justify-center">
                                 <span dir="ltr">
-                                    {{ data.cost }} تومان
+                                    {{ data.cost }}
                                 </span>
+                                <span>تومان</span>
                             </p>
-                            <p v-if='data.cash || data.card'>
+                            <p v-if='data.cash || data.card' class="flex gap-3 justify-center">
                                 <span dir="ltr">
-                                    {{ (data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0) }} تومان
+                                    {{ (data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0) }}
                                 </span>
+                                <span>تومان</span>
                             </p>
                             <span>{{ data.description ? data.description : 'نقدی و کارت' }}</span>
-                        </button>
-                        <div class="hidden gap-1 my-1 bg-white" :id="'form'+index">
+                        </button> -->
+                        <div class="grid grid-flow-col grid-cols-3 w-full p-1 border-b">
+                            <span class="flex gap-3 justify-center">{{ data.personName ? data.personName : "شما" }}</span>
+                            <p v-if='data.cost' class="flex gap-3 justify-center">
+                                <span dir="ltr">
+                                    {{ data.cost }}
+                                </span>
+                                <span>تومان</span>
+                            </p>
+                            <p v-if='data.cash || data.card' class="flex gap-3 justify-center">
+                                <span dir="ltr">
+                                    {{ (data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0) }}
+                                </span>
+                                <span>تومان</span>
+                            </p>
+                            <span class="flex gap-3 justify-center">{{ data.description ? data.description : 'نقدی و کارت' }}</span>
+                        </div>
+                        <!-- <div class="hidden gap-1 my-1 bg-white" :id="'form'+index">
                             <div class="grid grid-flow-col grid-cols-3 gap-1 my-1 bg-white">
                                 <input type="text" v-if="data.personName" class="bg-transparent outline-none border border-blue-500 placeholder:text-center text-center p-1" placeholder="ویرایش نام" :id="'personName'+index">
                                 <input type="text" class="bg-transparent outline-none border border-blue-500 placeholder:text-center text-center p-1" placeholder="ویرایش هزینه" :id="'cost'+index">
@@ -309,7 +308,7 @@ getData()
                                 <input type="text" v-if="data.description" class="bg-transparent outline-none border border-blue-500 placeholder:text-center text-center p-1" placeholder="ویرایش توضیحات" :id="'description'+index">
                             </div>
                             <button class="bg-blue-500 hover:bg-blue-600 p-2 text-white" @click="patchData(index)">ذخیره تغییرات</button>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>

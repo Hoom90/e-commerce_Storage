@@ -89,7 +89,7 @@ const postOutcome = async() => {
         "outcome": outcome,
         "balance": balance,
         "personName": personName.value,
-        "cost": '-' + cost.value,
+        "cost": cost.value,
         "description": description.value,
         "date" : dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
     };
@@ -217,14 +217,14 @@ getData()
         <div id="notebook">
             
 
-            <div class="flex justify-between p-[20px]">
+            <div class="flex flex-col md:flex-row justify-center items-center md:justify-between p-[20px]">
                 <span>درآمد امروز: {{ balanceData.income ? balanceData.income : '0' }} تومان</span>
                 <span>بدهی امروز: <span dir="ltr">{{ balanceData.outcome ? (balanceData.outcome) : '0' }}</span> تومان</span>
                 <p>وضعیت دخل امروز: <span dir="ltr">{{ balanceData.balance ? balanceData.balance : '0' }}</span> تومان</p>
             </div>
 
             <!-- table -->
-            <div class="w-[90%] md:m-5 md:mx-10 mx-auto mb-40">
+            <div class="w-[90%] md:m-5 md:mx-10 md:h-[50vh] lg:h-[55vh] mx-auto mb-40">
                 <div class="grid grid-flow-col grid-cols-12 border-b bg-white">
                     <div class="py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-4">نام کاربر</div>
                     <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-3">هزینه ها</div>
@@ -263,7 +263,7 @@ getData()
                 </div>
             </div>
             <!-- footer -->
-            <div class="hidden bg-white w-full h-[10vh] md:grid grid-cols-1 md:grid-cols-3 justify-center items-center gap-4 px-[20px]">
+            <div class="hidden bg-white w-full md:grid grid-cols-1 md:grid-cols-3 justify-center items-center gap-4 px-[20px]">
                 <div class="flex items-center justify-between gap-1 w-full col-span-1">
                     <span>کارتخوان:</span>
                     <input type="text" maxlength="15" class="border rounded-md h-[30px] w-4/5 px-2 outline-none" placeholder="0" dir="ltr" v-model="card"> تومان

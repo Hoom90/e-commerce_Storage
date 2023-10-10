@@ -19,6 +19,7 @@ let dbWarehouseData = ref([])
 let profit = ref(null)
 let debt = ref(null)
 let balance = ref(null)
+let mostSell = ref(null)
 const getData = async() => {
     loading.value = true
     await getAccountancyData()
@@ -26,6 +27,7 @@ const getData = async() => {
     setProfit()
     setDebt()
     setBalance()
+    setMostSell()
     loading.value = false
 }
 
@@ -60,38 +62,60 @@ const getWarehouseData = async() =>{
 
 const setProfit = () =>{
     profit.value =0
-    for (let i = 0; i < dbAccountData.value.length; i++) {
-        if(parseInt(dbAccountData.value[i].card) > 0){
-            profit.value = parseInt(profit.value) + parseInt(dbAccountData.value[i].card)
-        }
-        else if(parseInt(dbAccountData.value[i].cash) > 0){
-            profit.value = parseInt(profit.value) + parseInt(dbAccountData.value[i].cash)
-        }
-        else if(parseInt(dbAccountData.value[i].cost) > 0){
-            profit.value = parseInt(profit.value) + parseInt(dbAccountData.value[i].cost)
-        }
-    }     
+    if(dbAccountData.value){
+        for (let i = 0; i < dbAccountData.value.length; i++) {
+            if(parseInt(dbAccountData.value[i].card) > 0){
+                profit.value = parseInt(profit.value) + parseInt(dbAccountData.value[i].card)
+            }
+            else if(parseInt(dbAccountData.value[i].cash) > 0){
+                profit.value = parseInt(profit.value) + parseInt(dbAccountData.value[i].cash)
+            }
+            else if(parseInt(dbAccountData.value[i].cost) > 0){
+                profit.value = parseInt(profit.value) + parseInt(dbAccountData.value[i].cost)
+            }
+        }     
+    }
 }
 
 const setDebt = () =>{
     debt.value =0
-    for (let i = 0; i < dbAccountData.value.length; i++) {
-        if(parseInt(dbAccountData.value[i].card) < 0){
-            debt.value = parseInt(debt.value) - parseInt(dbAccountData.value[i].card)
-        }
-        else if(parseInt(dbAccountData.value[i].cash) < 0){
-            debt.value = parseInt(debt.value) - parseInt(dbAccountData.value[i].cash)
-        }
-        else if(parseInt(dbAccountData.value[i].cost) < 0){
-            debt.value = parseInt(debt.value) - parseInt(dbAccountData.value[i].cost)
-        }
-    }        
-    debt.value = debt.value.toString()
+    if(dbAccountData.value){
+        for (let i = 0; i < dbAccountData.value.length; i++) {
+            if(parseInt(dbAccountData.value[i].card) < 0){
+                debt.value = parseInt(debt.value) - parseInt(dbAccountData.value[i].card)
+            }
+            else if(parseInt(dbAccountData.value[i].cash) < 0){
+                debt.value = parseInt(debt.value) - parseInt(dbAccountData.value[i].cash)
+            }
+            else if(parseInt(dbAccountData.value[i].cost) < 0){
+                debt.value = parseInt(debt.value) - parseInt(dbAccountData.value[i].cost)
+            }
+        }        
+        debt.value = debt.value.toString()
+    }
 }
 
 const setBalance = () =>{
     balance.value = 0
     balance.value = profit.value - debt.value
+}
+
+const setMostSell = () =>{
+    let topSells = []
+    mostSell.value = null
+    if(dbWarehouseData.value){
+        for (let i = 0; i < dbWarehouseData.value.length; i++) {
+            if(dbWarehouseData.value[i].oldVal){
+                let amount = parseInt(dbWarehouseData.value[i].oldVal) - parseInt(dbWarehouseData.value[i].newVal)
+                let temp = {
+                    'name': dbWarehouseData.value[i].name,
+                    'amount': amount
+                }
+                topSells.push(temp)
+            }
+        }
+        mostSell.value = topSells
+    }
 }
 
 getData()
@@ -123,26 +147,38 @@ getData()
                         </div>
                     </div>
                 </div>
-                <div v-if="!dbAccountData" class="h-full flex justify-center items-center">
+                <div v-if="!dbAccountData" class="h-[80%] flex justify-center items-center">
                     تراکنشی ندارید
                 </div>
             </div>
             
             <div class="border lg:w-3/12 min-h-[200px] overflow-auto lg:max-h-none bg-white">
                 <RouterLink to="/warehouse/newOrder" class="border-b grid grid-flow-col grid-cols-12 items-center hover:bg-blue-500 hover:text-white">
-                    <span class='col-span-11'>فروخته شده های امروز</span>
+                    <span class='col-span-11'>تراکنش انبار امروز</span>
                     <img :src="editIconSVG" alt="editIconSVG">
                 </RouterLink>
                 <div class="overflow-y-auto" v-if="dbWarehouseData">
                     <div v-for="(data,index) in dbWarehouseData" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" v-bind:key="index">
                         <div class="grid grid-flow-col grid-cols-12 w-full p-1 border-b">
-                            <span class="col-span-11">{{ data.name ? data.name : data.description }}</span>
-                            <span>{{ data.oldVal ? parseInt(data.oldVal) - parseInt(data.newVal) : '' }}</span>
+                            <span :class="data.oldVal?'col-span-11':'col-span-12'">{{ data.name ? data.name : data.description }}</span>
+                            <span v-if="data.oldVal">{{ parseInt(data.oldVal) - parseInt(data.newVal) }}</span>
                         </div>
                     </div>
                 </div>
-                <div v-if="!dbWarehouseData" class="h-full flex justify-center items-center">
+                <div v-if="!dbWarehouseData" class="h-[80%] flex justify-center items-center">
                     کالایی جابه جا نشده است
+                </div>
+            </div>
+
+            <div class="border lg:w-3/12 min-h-[200px] overflow-auto lg:max-h-none bg-white" v-if="mostSell">
+                <div class="border-b items-center">درصد فروش روز</div>
+                <div class="overflow-y-auto">
+                    <div v-for="(data,index) in mostSell" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" v-bind:key="index">
+                        <div class="grid grid-flow-col justify-between px-[20px] border-b">
+                            <span>{{ data.name }}</span>
+                            <span>{{ data.amount }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 

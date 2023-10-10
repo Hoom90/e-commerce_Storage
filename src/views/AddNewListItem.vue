@@ -138,7 +138,7 @@ const updateItem = (item)=>{
     costs.value += parseInt(item.value.basePrice)
     profits.value += parseInt(item.value.profit) * parseInt(item.value.amount)
 }
-T
+
 getData()
 </script>
 <template>
