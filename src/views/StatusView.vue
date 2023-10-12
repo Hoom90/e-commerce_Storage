@@ -217,8 +217,8 @@ getData()
 
 </script>
 <template>
-    <main class="flex flex-col pt-[25px] justify-center items-center">
-        <div class=" w-full px-5 flex items-center gap-1">
+    <main class="flex flex-col pt-[25px] justify-center items-center relative">
+        <div class=" w-full px-5 flex items-center gap-1 -z-10">
             <span class="text-[24px]">آمار</span>
             <span>&#62;</span>
             <div>دخل و خرج ها</div>
@@ -250,9 +250,9 @@ getData()
                     <p class="text-red-500">{{ balance.date }}</p>
                 </div>
                 <div class="flex flex-col md:flex-row justify-center items-center gap-10 p-[20px]">
-                    <p>درآمد امروز: {{ balanceData.income ? balanceData.income : '0' }} تومان</p>
-                    <p>بدهی امروز: <span dir="ltr">{{ balanceData.outcome ? (balanceData.outcome) : '0' }}</span> تومان</p>
-                    <p>وضعیت دخل امروز: <span dir="ltr">{{ balanceData.balance ? balanceData.balance : '0' }}</span> تومان</p>
+                    <p>درآمد امروز: {{ balanceData.income ? balanceData.income.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0' }} تومان</p>
+                    <p>بدهی امروز: <span dir="ltr">{{ balanceData.outcome ? balanceData.outcome.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0' }}</span> تومان</p>
+                    <p>وضعیت دخل امروز: <span dir="ltr">{{ balanceData.balance ? balanceData.balance.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0' }}</span> تومان</p>
                 </div>
             </div>
             <div class="h-[90%]"> 
@@ -265,22 +265,6 @@ getData()
                 <!-- body -->
                 <div id="table">
                     <div v-for="(data,index) in logs" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" :name="'persons' + index" v-bind:key='index'>
-                        <!-- <button @click="handleLogs(index)" class="grid grid-flow-col grid-cols-3 w-full p-1 border-b">
-                            <span>{{ data.personName ? data.personName : "شما" }}</span>
-                            <p v-if='data.cost' class="flex gap-3 justify-center">
-                                <span dir="ltr">
-                                    {{ data.cost }}
-                                </span>
-                                <span>تومان</span>
-                            </p>
-                            <p v-if='data.cash || data.card' class="flex gap-3 justify-center">
-                                <span dir="ltr">
-                                    {{ (data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0) }}
-                                </span>
-                                <span>تومان</span>
-                            </p>
-                            <span>{{ data.description ? data.description : 'نقدی و کارت' }}</span>
-                        </button> -->
                         <div class="grid grid-flow-col grid-cols-3 w-full p-1 border-b">
                             <span class="flex gap-3 justify-center">{{ data.personName ? data.personName : "شما" }}</span>
                             <p v-if='data.cost' class="flex gap-3 justify-center">
@@ -291,24 +275,12 @@ getData()
                             </p>
                             <p v-if='data.cash || data.card' class="flex gap-3 justify-center">
                                 <span dir="ltr">
-                                    {{ (data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0) }}
+                                    {{ (data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
                                 </span>
                                 <span>تومان</span>
                             </p>
                             <span class="flex gap-3 justify-center">{{ data.description ? data.description : 'نقدی و کارت' }}</span>
                         </div>
-                        <!-- <div class="hidden gap-1 my-1 bg-white" :id="'form'+index">
-                            <div class="grid grid-flow-col grid-cols-3 gap-1 my-1 bg-white">
-                                <input type="text" v-if="data.personName" class="bg-transparent outline-none border border-blue-500 placeholder:text-center text-center p-1" placeholder="ویرایش نام" :id="'personName'+index">
-                                <input type="text" class="bg-transparent outline-none border border-blue-500 placeholder:text-center text-center p-1" placeholder="ویرایش هزینه" :id="'cost'+index">
-                                <select v-if="!data.cost" class="bg-transparent outline-none border border-blue-500 placeholder:text-center text-center p-1" :id="'type'+index">
-                                    <option value="card">کارتی</option>
-                                    <option value="cash">نقدی</option>
-                                </select>
-                                <input type="text" v-if="data.description" class="bg-transparent outline-none border border-blue-500 placeholder:text-center text-center p-1" placeholder="ویرایش توضیحات" :id="'description'+index">
-                            </div>
-                            <button class="bg-blue-500 hover:bg-blue-600 p-2 text-white" @click="patchData(index)">ذخیره تغییرات</button>
-                        </div> -->
                     </div>
                 </div>
             </div>

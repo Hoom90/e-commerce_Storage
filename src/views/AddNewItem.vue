@@ -358,7 +358,7 @@ getData();
             >
               <span>{{ item.name }}</span>
               <span dir="ltr">{{
-                item.price ? "تومان " + item.price : "بدون قیمت"
+                item.price ? "تومان " + item.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "بدون قیمت"
               }}</span>
             </div>
           </button>

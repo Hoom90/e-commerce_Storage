@@ -15,9 +15,16 @@ onMounted(()=>{
     getData()
 })
 
+const init = async() =>{
+    loading.value = true
+    await getData()
+    calculateLiquidity()
+    calculateStockAmount()
+    loading.value = false
+}
+
 // Get All Items
 const getData = async()=> {
-    loading.value = true
     await axios.get(serverURL + "/api/itemTransaction/")
     .then((res)=>{
         if(res.data.length != 0){
@@ -31,11 +38,32 @@ const getData = async()=> {
     .catch(function (error) {
         console.log(error);
         message.value = error
-    })
-    .finally(
         loading.value = false
-    )
+    })
 }
+
+const calculateLiquidity = () =>{
+    let liquidity = 0
+    dbData.value.forEach(item => {
+        liquidity = parseInt(liquidity) + (parseInt(item.basePrice) * parseInt(item.amount))
+    });
+    liquidity = formatData(liquidity)
+    document.getElementById('liquidity').innerText = liquidity.toString()
+}
+
+const calculateStockAmount = () =>{
+    let stockAmount = 0
+    dbData.value.forEach(item =>{
+        stockAmount = parseInt(stockAmount) + parseInt(item.amount)
+    })
+    stockAmount = formatData(stockAmount)
+    document.getElementById('stockAmount').innerText = stockAmount.toString()
+}
+
+// turn string to currency
+const formatData = (data) => {
+  return (data = data.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+};
 
 const searchBox2 =ref(null)
 const searchData = () => {
@@ -55,11 +83,11 @@ const searchData = () => {
     }
 }
 
-getData()
+init()
 </script>
 <template>
     <main class="flex flex-col pt-[25px] justify-center items-center relative">
-        <div class="text-[24px] w-full px-5 flex items-center gap-5 justify-between">
+        <div class="text-[24px] w-full px-5 flex items-center gap-5 justify-between -z-10">
             <span>ثبت کالا</span>
         </div>
         <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
@@ -67,6 +95,17 @@ getData()
             <i>x</i>
         </button>
         <div class="border w-[90%] mt-3">
+            <!-- table tools -->
+            <div class="py-[10px] px-[20px] flex justify-between gap-1 w-full border-b">
+                <div class="grid grid-flow-col gap-10 w-full">
+                    <div class="flex gap-3">
+                        <span>تعداد اقلام انبار:</span><span dir="ltr" id="stockAmount">0</span>
+                    </div>
+                    <div class="flex gap-3">
+                        <span>نقدینگی انبار:</span><span dir="ltr" id="liquidity">0</span><span>تومان</span>
+                    </div>
+                </div>
+            </div>
             <!-- table tools -->
             <div class="py-[10px] px-[20px] flex justify-between gap-1 w-full border-b">
                 <div class="flex gap-1">
@@ -98,16 +137,18 @@ getData()
                 <div class="grid grid-flow-col grid-cols-12 border-b">
 
                     <div class="py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">رکورد</div>
-                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-6 lg:col-span-7">نام
+                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-6 lg:col-span-6">نام
                     </div>
                     <div class="border-r py-2 px-3 hidden lg:flex justify-center items-center text-[12px] truncate lg:col-span-1">وزن
                     </div>
-                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-3 lg:col-span-1">فی(تومان)
+                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-2 lg:col-span-1">فی(تومان)
                     </div>
-                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] col-span-3 truncate lg:col-span-1">تعداد(عدد)
+                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] col-span-1 truncate lg:col-span-1">تعداد(عدد)
                     </div>
                     <div class="border-r py-2 px-3 hidden lg:flex justify-center items-center text-[12px] truncate lg:col-span-1">تاریخ
                     <br class="block md:hidden"/>دریافت</div>
+                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-2 lg:col-span-1">نقدینگی
+                    </div>
                     
                 </div>
                 <!-- content --> 
@@ -116,19 +157,22 @@ getData()
                     <RouterLink :to="'/warehouse/' + data._id" v-for="(data, index) in dbData" class="grid grid-flow-col grid-cols-12 border-b min-h-[30px] hover:bg-gray-50 cursor-pointer" id="tableData" v-bind:key="index">
                         <div class="py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">{{ index + 1 }}
                         </div>
-                        <div id="dataName" class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-6 lg:col-span-7">
+                        <div id="dataName" class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-6 lg:col-span-6">
                             {{ data.name }}</div>
                         <div class="border-r py-2 px-3 hidden lg:flex justify-center items-center text-[12px] truncate lg:col-span-1">
                             {{ data.weight ? data.weight == 'null' ? "-" : data.weight : "-" }}</div>
-                        <div class="border-r py-2 px-3 flex gap-1 justify-center items-center text-[12px] truncate col-span-3 lg:col-span-1">
-                            <span class="text-white bg-red-500 p-1">{{ data.basePrice ? data.basePrice == 'null' ? "-" : data.basePrice : "-" }}</span>
-                            <span class="text-white bg-green-500 p-1">{{ data.price ? data.price == 'null' ? "-" : data.price : "-" }}</span></div>
-                        <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-3 lg:col-span-1">
-                            {{ data.amount ? data.amount == 'null' ? "-" : data.amount : "-" }}</div>
+                        <div class="border-r py-2 px-3 flex flex-wrap gap-1 justify-center items-center text-[12px] truncate col-span-2 lg:col-span-1">
+                            <span class="text-white bg-red-500 p-1">{{ data.basePrice ? data.basePrice == 'null' ? "-" : data.basePrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "-" }}</span>
+                            <span class="text-white bg-green-500 p-1">{{ data.price ? data.price == 'null' ? "-" : data.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "-" }}</span></div>
+                        <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1 lg:col-span-1">
+                            {{ data.amount ? data.amount == 'null' ? "-" : data.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "-" }}</div>
                         <div
                             class="border-r py-2 px-3 hidden lg:flex justify-center items-center text-[12px] truncate lg:col-span-1 flex-col">
                             <span dir='ltr'>{{ data.date ? data.date == 'null' ? "-" : data.date : "-" }}</span>
                         </div>
+                        <div
+                            class="border-r py-2 px-3 flex flex-wrap gap-1 justify-center items-center text-[12px] truncate col-span-2 lg:col-span-1">
+                            <span class="text-white bg-red-500 p-1">{{ data.basePrice ? data.basePrice == 'null' ? "-" : (data.basePrice * data.amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "-" }}</span></div>
                     </RouterLink>
 
                 </div>

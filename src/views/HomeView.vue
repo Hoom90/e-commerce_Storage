@@ -121,8 +121,8 @@ const setMostSell = () =>{
 getData()
 </script>
 <template>
-    <main class="flex flex-col pt-[20px] justify-center items-center">
-        <div class="text-[24px] w-full px-5 flex items-center gap-5 justify-between">
+    <main class="flex flex-col pt-[20px] justify-center items-center relative">
+        <div class="text-[24px] w-full px-5 flex items-center gap-5 justify-between -z-10">
             <span>میزکار</span>
         </div>
         <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">

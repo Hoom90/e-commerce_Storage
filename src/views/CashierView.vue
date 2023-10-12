@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import Loading from '../components/loading.vue'
 import serverURL from '../config/serverAddress'
+import RemoveIconSVG from '../assets/removeIcon.svg'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import jalaliday from 'jalaliday'
@@ -206,7 +207,7 @@ getData()
 </script>
 <template>
     <main class="flex flex-col pt-[25px] justify-center items-center relative">
-        <div class="text-[24px] w-full px-5 flex items-center gap-5 justify-between">
+        <div class="text-[24px] w-full px-5 flex items-center gap-5 justify-between -z-10">
             <span>صندوق</span>
         </div>
         <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
@@ -218,9 +219,9 @@ getData()
             
 
             <div class="flex flex-col md:flex-row justify-center items-center md:justify-between p-[20px]">
-                <span>درآمد امروز: {{ balanceData.income ? balanceData.income : '0' }} تومان</span>
-                <span>بدهی امروز: <span dir="ltr">{{ balanceData.outcome ? (balanceData.outcome) : '0' }}</span> تومان</span>
-                <p>وضعیت دخل امروز: <span dir="ltr">{{ balanceData.balance ? balanceData.balance : '0' }}</span> تومان</p>
+                <span>درآمد امروز: {{ balanceData.income ? balanceData.income.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0' }} تومان</span>
+                <span>بدهی امروز: <span dir="ltr">{{ balanceData.outcome ? balanceData.outcome.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0' }}</span> تومان</span>
+                <p>وضعیت دخل امروز: <span dir="ltr">{{ balanceData.balance ? balanceData.balance.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0' }}</span> تومان</p>
             </div>
 
             <!-- table -->
@@ -235,11 +236,11 @@ getData()
                     <div v-if="transactionData != null" class="max-h-[500px] overflow-auto">
                       <div v-for="(data,index) in transactionData" class="grid grid-flow-col grid-cols-12 border-b odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" :name="'data'+index" v-bind:key="index">
                           <div class="flex justify-center items-center text-[12px] truncate col-span-4 p-2 px-3">{{ data.personName ? data.personName : "شما" }}</div>
-                          <div class="border-r flex justify-center items-center text-[12px] truncate col-span-3 p-2 px-3" dir='ltr'>{{ data.cost ? data.cost : (parseInt(data.cash) + parseInt(data.card))  }} تومان</div>
+                          <div class="border-r flex justify-center items-center text-[12px] truncate col-span-3 p-2 px-3" dir='ltr'>{{ data.cost ? data.cost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : (parseInt(data.cash) + parseInt(data.card)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")  }} تومان</div>
                           <div class="border-r flex justify-center items-center text-[12px] truncate col-span-4 p-2 px-3">{{ data.description }}</div>
                           <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">
                               <button class="bg-red-500 p-1 rounded-md text-white hover:bg-red-600 shadow-lg hover:shadow-none" @click="deleteData(index)">
-                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.207 6.207a1 1 0 0 0-1.414-1.414L12 10.586 6.207 4.793a1 1 0 0 0-1.414 1.414L10.586 12l-5.793 5.793a1 1 0 1 0 1.414 1.414L12 13.414l5.793 5.793a1 1 0 0 0 1.414-1.414L13.414 12l5.793-5.793z" fill="#ffffff"/></svg>
+                                <img :src="RemoveIconSVG" alt="RemoveIconSVG">
                               </button>
                           </div>
                       </div>

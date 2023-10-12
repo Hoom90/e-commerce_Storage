@@ -16,15 +16,14 @@ onMounted(()=>{
   }
 })
 
-const flag = ref(false)
 const handleDropdown = () => {
-  if (flag.value) {
-    document.querySelector("div[name=menu]").classList.replace('flex', 'hidden')
-    flag.value = false
+  if (document.getElementById("dropdown").classList.contains('hidden')) {
+    document.getElementById("dropdown").classList.replace('hidden', 'flex')
+    document.getElementById("container").classList.add('-z-10')
   }
   else {
-    document.querySelector("div[name=menu]").classList.replace('hidden', 'flex')
-    flag.value = true
+    document.getElementById("dropdown").classList.replace('flex', 'hidden')
+    document.getElementById("container").classList.remove('-z-10')
   }
 }
 
@@ -48,9 +47,9 @@ const handleLogout = () =>{
               stroke-linejoin="round" />
           </svg>
         </button>
-        <div class="hidden absolute top-[10svh] py-[10px] bg-white w-full" name="menu">
+        <div class="hidden absolute left-0 top-[10svh] bg-slate-50 shadow-[0px_5px_5px_#c9c9c9] w-full px-[20px]" id="dropdown" @click="handleDropdown">
           <RouterLink to="/" exact-active-class="bg-blue-500" class="p-2 px-3 border-b">میزکار</RouterLink>
-          <RouterLink to="/warehouse" exact-active-class="bg-blue-500" class="p-2 px-3 border-b">ثبت کالا</RouterLink>
+          <RouterLink to="/warehouse" exact-active-class="bg-blue-500" class="p-2 px-3 border-b">انبارداری</RouterLink>
           <RouterLink to="/cashier" exact-active-class="bg-blue-500" class="p-2 px-3 border-b">صندوق</RouterLink>
           <RouterLink to="/status" exact-active-class="bg-blue-500" class="p-2 px-3 border-b">آمار</RouterLink>
         </div>
@@ -66,12 +65,12 @@ const handleLogout = () =>{
       <div class="bg-white h-full shadow-[0px_3px_3px_#c9c9c9] z-10 flex flex-col">
         <div class="hidden md:flex bg-slate-50 h-full flex-col">
           <RouterLink to="/" active-class="bg-blue-500" class="p-2 px-3 border-b hover:bg-blue-600 text-center">میزکار</RouterLink>
-          <RouterLink to="/warehouse" active-class="bg-blue-500" class="p-2 px-3 border-b hover:bg-blue-600 text-center">ثبت کالا</RouterLink>
+          <RouterLink to="/warehouse" active-class="bg-blue-500" class="p-2 px-3 border-b hover:bg-blue-600 text-center">انبارداری</RouterLink>
           <RouterLink to="/cashier" active-class="bg-blue-500" class="p-2 px-3 border-b hover:bg-blue-600 text-center">صندوق</RouterLink>
           <RouterLink to="/status" active-class="bg-blue-500" class="p-2 px-3 border-b hover:bg-blue-600 text-center">آمار</RouterLink>
         </div>
       </div>
-      <div class="w-full overflow-auto">
+      <div class="w-full overflow-auto" id="container">
         <RouterView></RouterView>
       </div>
     </div>
