@@ -18,8 +18,10 @@ onMounted(()=>{
 const init = async() =>{
     loading.value = true
     await getData()
-    calculateLiquidity()
-    calculateStockAmount()
+    if(dbData.value){
+        calculateLiquidity()
+        calculateStockAmount()
+    }
     loading.value = false
 }
 
