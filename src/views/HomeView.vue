@@ -15,17 +15,19 @@ const message = ref(null)
 
 let dbAccountData = ref([])
 let dbWarehouseData = ref([])
+let dbBalance = ref(null)
 
 let profit = ref(null)
-let debt = ref(null)
+let spend = ref(null)
 let balance = ref(null)
 let mostSell = ref(null)
 const getData = async() => {
     loading.value = true
     await getAccountancyData()
     await getWarehouseData()
+    await getBalance()
     setProfit()
-    setDebt()
+    setSpend()
     setBalance()
     setMostSell()
     loading.value = false
@@ -60,6 +62,17 @@ const getWarehouseData = async() =>{
   .catch(function (error) { console.log(error),loading.value = false,message.value = error})
 }
 
+// Get Last Balance
+const getBalance = async () =>{
+    await axios.get(serverURL + "/api/balanceTransaction/"+ dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
+      (res)=>{
+        dbBalance = res.data
+        setDebt()
+      }
+    )
+    .catch(function (error) { console.log(error),loading.value = false,message.value=error})
+}
+
 const setProfit = () =>{
     profit.value =0
     if(dbAccountData.value){
@@ -77,41 +90,71 @@ const setProfit = () =>{
     }
 }
 
-const setDebt = () =>{
-    debt.value =0
+const setSpend = () =>{
+    spend.value =0
     if(dbAccountData.value){
         for (let i = 0; i < dbAccountData.value.length; i++) {
             if(parseInt(dbAccountData.value[i].card) < 0){
-                debt.value = parseInt(debt.value) - parseInt(dbAccountData.value[i].card)
+                spend.value = parseInt(spend.value) - parseInt(dbAccountData.value[i].card)
             }
             else if(parseInt(dbAccountData.value[i].cash) < 0){
-                debt.value = parseInt(debt.value) - parseInt(dbAccountData.value[i].cash)
+                spend.value = parseInt(spend.value) - parseInt(dbAccountData.value[i].cash)
             }
             else if(parseInt(dbAccountData.value[i].cost) < 0){
-                debt.value = parseInt(debt.value) - parseInt(dbAccountData.value[i].cost)
+                spend.value = parseInt(spend.value) - parseInt(dbAccountData.value[i].cost)
             }
         }        
-        debt.value = debt.value.toString()
+        spend.value = spend.value.toString()
+    }
+}
+
+const setDebt = () =>{
+    let income = 0 , outcome = 0 ,balance=0
+    dbBalance.forEach(item => {
+        income += parseInt( item.income)
+        outcome += parseInt( item.outcome)
+    });
+    if(parseInt(outcome) < 0){
+        balance = parseInt(income) + parseInt(outcome)
+    }
+    else{
+        balance = parseInt(income) - parseInt(outcome)
+    }
+    dbBalance = {
+        income,
+        outcome,
+        balance,
+        'date' : dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
     }
 }
 
 const setBalance = () =>{
     balance.value = 0
-    balance.value = profit.value - debt.value
+    balance.value = profit.value - spend.value
 }
 
 const setMostSell = () =>{
-    let topSells = []
+    let topSells = [] , sample = []
     mostSell.value = null
     if(dbWarehouseData.value){
         for (let i = 0; i < dbWarehouseData.value.length; i++) {
             if(dbWarehouseData.value[i].oldVal){
-                let amount = parseInt(dbWarehouseData.value[i].oldVal) - parseInt(dbWarehouseData.value[i].newVal)
-                let temp = {
-                    'name': dbWarehouseData.value[i].name,
-                    'amount': amount
+                if (!sample.includes(dbWarehouseData.value[i].name)) {
+                    let amount = parseInt(dbWarehouseData.value[i].oldVal) - parseInt(dbWarehouseData.value[i].newVal)
+                    let temp = {
+                        'name': dbWarehouseData.value[i].name,
+                        'amount': amount
+                    }
+                    topSells.push(temp)
+                    sample.push(dbWarehouseData.value[i].name);
                 }
-                topSells.push(temp)
+                else if(sample.includes(dbWarehouseData.value[i].name)){
+                    for(let j=0;j<topSells.length;j++){
+                        if(dbWarehouseData.value[i].name === topSells[j].name){
+                            topSells[j].amount += parseInt(dbWarehouseData.value[i].oldVal) - parseInt(dbWarehouseData.value[i].newVal)
+                        }
+                    }
+                }
             }
         }
         mostSell.value = topSells
@@ -171,7 +214,7 @@ getData()
             </div>
 
             <div class="border lg:w-3/12 min-h-[200px] overflow-auto lg:max-h-none bg-white" v-if="mostSell">
-                <div class="border-b items-center">درصد فروش روز</div>
+                <div class="border-b items-center">کالاهای پرفروش روز</div>
                 <div class="overflow-y-auto">
                     <div v-for="(data,index) in mostSell" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" v-bind:key="index">
                         <div class="grid grid-flow-col justify-between px-[20px] border-b">
@@ -191,10 +234,17 @@ getData()
                     </div>
                 </div>
 
-                <div class="border" v-if="debt">
-                    <div class="border-b items-center">بدهی امروز</div>
+                <div class="border" v-if="spend">
+                    <div class="border-b items-center">خرج امروز</div>
                     <div class="bg-[#f6f6f6] hover:bg-[#e9e9e9]">
-                        {{ debt }}
+                        {{ spend }}
+                    </div>
+                </div>
+
+                <div class="border" v-if="dbBalance">
+                    <div class="border-b items-center">بدهی امروز</div>
+                    <div class="bg-[#f6f6f6] hover:bg-[#e9e9e9]" dir="ltr">
+                        {{ dbBalance.outcome }}
                     </div>
                 </div>
 

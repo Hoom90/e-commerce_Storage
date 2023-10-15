@@ -10,6 +10,8 @@ const dbData = ref(null)
 const message = ref(null)
 const loading = ref(false)
 const errorMessage = ref(null)
+const stockAmount = ref(0)
+const liquidity = ref(0)
 
 onMounted(()=>{
     getData()
@@ -17,6 +19,8 @@ onMounted(()=>{
 
 const init = async() =>{
     loading.value = true
+    stockAmount.value = 0
+    liquidity.value = 0
     await getData()
     if(dbData.value){
         calculateLiquidity()
@@ -45,21 +49,19 @@ const getData = async()=> {
 }
 
 const calculateLiquidity = () =>{
-    let liquidity = 0
+    let temp = 0
     dbData.value.forEach(item => {
-        liquidity = parseInt(liquidity) + (parseInt(item.basePrice) * parseInt(item.amount))
+        temp = parseInt(temp) + (parseInt(item.basePrice) * parseInt(item.amount))
     });
-    liquidity = formatData(liquidity)
-    document.getElementById('liquidity').innerText = liquidity.toString()
+    liquidity.value = formatData(temp)
 }
 
 const calculateStockAmount = () =>{
-    let stockAmount = 0
+    let temp = 0
     dbData.value.forEach(item =>{
-        stockAmount = parseInt(stockAmount) + parseInt(item.amount)
+     temp = parseInt(temp) + parseInt(item.amount)
     })
-    stockAmount = formatData(stockAmount)
-    document.getElementById('stockAmount').innerText = stockAmount.toString()
+    stockAmount.value = formatData(temp)
 }
 
 // turn string to currency
@@ -101,10 +103,10 @@ init()
             <div class="py-[10px] px-[20px] flex justify-between gap-1 w-full border-b">
                 <div class="grid grid-flow-col gap-10 w-full">
                     <div class="flex gap-3">
-                        <span>تعداد اقلام انبار:</span><span dir="ltr" id="stockAmount">0</span>
+                        <span>تعداد اقلام انبار:</span><span dir="ltr">{{stockAmount}}</span>
                     </div>
                     <div class="flex gap-3">
-                        <span>نقدینگی انبار:</span><span dir="ltr" id="liquidity">0</span><span>تومان</span>
+                        <span>نقدینگی انبار:</span><span dir="ltr">{{liquidity}}</span><span>تومان</span>
                     </div>
                 </div>
             </div>
@@ -163,7 +165,7 @@ init()
                             {{ data.name }}</div>
                         <div class="border-r py-2 px-3 hidden lg:flex justify-center items-center text-[12px] truncate lg:col-span-1">
                             {{ data.weight ? data.weight == 'null' ? "-" : data.weight : "-" }}</div>
-                        <div class="border-r py-2 px-3 flex flex-wrap gap-1 justify-center items-center text-[12px] truncate col-span-2 lg:col-span-1">
+                        <div class="border-r py-2 px-3 flex flex-wrap lg:flex-nowrap gap-1 justify-center items-center text-[12px] truncate col-span-2 lg:col-span-1">
                             <span class="text-white bg-red-500 p-1">{{ data.basePrice ? data.basePrice == 'null' ? "-" : data.basePrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "-" }}</span>
                             <span class="text-white bg-green-500 p-1">{{ data.price ? data.price == 'null' ? "-" : data.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "-" }}</span></div>
                         <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1 lg:col-span-1">

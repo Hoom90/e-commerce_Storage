@@ -164,11 +164,18 @@ const patchData = async (index) =>{
 const handleSelectedDate = (date) =>{
     logs.value = []
     balance.value = null
+    let card = 0,cash=0
     logsData.value.forEach(item =>{
         if(date == item.date && (item.card || item.cash) ){
-            balance.value = item
+            card += parseInt(item.card)
+            cash += parseInt(item.cash)
         }
     })
+    balance.value = {
+        'card':card,
+        'cash':cash,
+        'date':date
+    }
     logsData.value.forEach(item =>{
         if(date == item.date){
             logs.value.push(item)
@@ -275,7 +282,7 @@ getData()
                             </p>
                             <p v-if='data.cash || data.card' class="flex gap-3 justify-center">
                                 <span dir="ltr">
-                                    {{ (data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
+                                    {{ ((data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
                                 </span>
                                 <span>تومان</span>
                             </p>

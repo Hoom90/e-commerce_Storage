@@ -17,7 +17,7 @@ let price = ref(0);
 let profit = ref(null);
 let amount = ref(null);
 let billId = ref(null);
-let date = ref(null);
+let date = ref(ref(dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')));
 
 const dbData = ref(null);
 const balanceData = ref(null);
@@ -37,7 +37,9 @@ const getItems = async () => {
   await axios
     .get(serverURL + "/api/itemTransaction/")
     .then((res) => {
-      dbData.value = res.data;
+      if(res.data.length != 0){
+        dbData.value = res.data;
+      }
     })
     .catch(function (error) {
       console.log(error);
@@ -86,12 +88,14 @@ const calculateBalance = () => {
 
 const postData = async () => {
   loading.value = true;
+  let debtBalance = document.getElementById('debtBalance').innerText.replace(',','')
+  let debtPay = document.getElementById('debtPay').value.replace(',','')
+  let outcome = parseInt(debtBalance) - parseInt(debtPay)
+  let balance = balanceData.value.balance ? parseInt(balanceData.value.balance) - outcome : -outcome
   const body = {
-    'income': "0",
-    'outcome': (document.getElementById('debtBalance').innerText).toString(),
-    'balance': balanceData.value.balance
-      ? (parseInt(balanceData.value.balance) - parseInt(document.getElementById('debtBalance').innerText)).toString()
-      : (-parseInt(document.getElementById('debtBalance').innerText)).toString(),
+    'outcome': (-outcome).toString(),
+    'balance': balance.toString(),
+    'card': (debtPay * -1).toString(),
     'description': 'خرید کالا',
     'name': name.value,
     'weight': weight.value,
@@ -102,17 +106,21 @@ const postData = async () => {
     'billId': billId.value,
     'date': date.value,
   };
+  // console.log(body);
   await axios
     .post(serverURL + "/api/itemTransaction", body, {
       headers: {
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
     })
+    .then(res =>{
+      router.push("/warehouse")
+    })
     .catch((error) => {
       console.log(error);
       message.value = error;
     })
-    .finally((loading.value = false), router.push("/warehouse"));
+    .finally((loading.value = false));
 };
 
 const searchBox = ref(null);
@@ -381,7 +389,7 @@ getData();
             </button>
           </div>
         </div>
-        <div class="flex justify-center gap-1 my-1 border rounded-md p-3" v-if="dbData == null">
+        <div class="flex justify-center gap-1 my-1 border rounded-md p-2" v-if="dbData">
           هیچ کالایی یافت نشد
         </div>
 

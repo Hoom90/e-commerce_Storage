@@ -12,8 +12,9 @@ import jalaliday from "jalaliday";
 dayjs.extend(jalaliday);
 
 const billInfo = ref(null)
+const date = ref(null)
 const costs = ref(0)
-const profits = ref(0)
+const pay = ref(0)
 
 const dbData = ref(null)
 const balanceData = ref(null);
@@ -81,18 +82,21 @@ const calculateBalance = () => {
   };
 };
 
-// Customed POST
+// POST List
 const postData = async () => {
     loading.value = true
-    let fail = false
+    const body = []
+    let outcome = costs.value.replace(',','')
+    let paid = pay.value.replace(',','')
+    body.push({
+        'outcome': (-(outcome - paid)).toString(),
+        'balance': balanceData.value.balance ? (parseInt(balanceData.value.balance) - (outcome - paid)).toString() : (-(outcome - paid)).toString(),
+        'card' : (-paid).toString(),
+        'description': 'خرید فاکتور',
+        'date': date.value,
+    })
     for(let i=0;i<billData.value.length;i++){
-        const body = {
-            'income': "0",
-            'outcome': (parseInt(basePrice.value) * parseInt(amount.value)).toString(),
-            'balance': balanceData.value.balance
-            ? (parseInt(balanceData.value.balance) - parseInt(parseInt(basePrice.value) * parseInt(amount.value))).toString()
-            : (-parseInt(parseInt(basePrice.value) * parseInt(amount.value))).toString(),
-            'description': 'خرید فاکتور',
+        body.push({
             'name': billData.value[i].name,
             'weight': billData.value[i].weight,
             'basePrice': billData.value[i].basePrice,
@@ -101,31 +105,32 @@ const postData = async () => {
             'amount': billData.value[i].amount,
             'billId': billData.value[i].billId,
             'date': billData.value[i].date
-        }
-        await fetch(serverURL + "/api/itemTransaction",body, {
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('token'),
-            }
         })
-        .then((res) => {
-            if (!res.ok) {
-                console.log(res.statusText);
-                message.value = res.statusText
-                loading.value = false
-                fail = true
-            }
-        })
-        if(fail){
-            break;
-        }
     }
-    loading.value = false
-    router.push('/warehouse')
+    await axios.post(serverURL + "/api/itemTransaction/list",body, {
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token'),
+        }
+    })
+    .then(res =>{
+        router.push("/warehouse")
+    })
+    .catch((error) => {
+      console.log(error);
+      message.value = error;
+    })
+    .finally((loading.value = false));
+}
+
+let day = ref(dayjs().calendar('jalali').locale('fa').format('DD'));
+let month = ref(dayjs().calendar('jalali').locale('fa').format('MM'));
+let year = ref(dayjs().calendar('jalali').locale('fa').format('YYYY'));
+const setDate = () => {
+    date.value = year.value + '/' + month.value + '/' + day.value
 }
 
 const removeItemFromList = (index) =>{
-    costs.value -= parseInt(billData.value[index].basePrice)
-    profits.value -= parseInt(billData.value[index].profit) * parseInt(billData.value[index].amount)
+    costs.value = formatData(parseInt(costs.value.replace(',','')) - parseInt(billData.value[index].basePrice))
     billData.value.splice(index, 1);
 }
 
@@ -135,81 +140,124 @@ const updateModal = (value) =>{
 
 const updateItem = (item)=>{
     billData.value.push(item.value)
-    costs.value += parseInt(item.value.basePrice)
-    profits.value += parseInt(item.value.profit) * parseInt(item.value.amount)
+    if(costs.value != 0){
+        costs.value = formatData(parseInt(costs.value.replace(',','')) + (parseInt(item.value.basePrice)*parseInt(item.value.amount)))
+    }
+    else{
+        costs.value = formatData(parseInt(costs.value) + (parseInt(item.value.basePrice)*parseInt(item.value.amount)))
+    }
+    pay.value = costs.value
 }
+
+const formatData = (data) => {
+  if(data){
+    return (data = data.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+  }
+};
 
 getData()
 </script>
 <template>
     <!-- multi add -->
-    <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
-        {{message}}
-        <i>x</i>
-    </button>
-    <div class="w-full p-[20px]" v-if="!modal">
-        <div class="max-w-[800px] mx-auto my-[20px] border rounded-md p-[10px]">
+    <div class="w-full relative" v-if="!modal">
+        <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
+            {{message}}
+            <i>x</i>
+        </button>
+        <div class="p-[20px]">
+            <div class="max-w-[800px] mx-auto my-[20px] border rounded-md p-[10px]">
 
-            <!-- header -->
-            <div class="flex justify-center">
-                <div class="flex items-center">
-                    <RouterLink to="/warehouse" class="flex gap-1 items-center hover:bg-red-500 hover:text-white border border-red-500 rounded-md p-2">
-                        <img :src="RemoveIconSVG" alt="RemoveIconSVG">
-                    </RouterLink>
+                <!-- header -->
+                <div class="flex justify-center">
+                    <div class="flex items-center">
+                        <RouterLink to="/warehouse" class="flex gap-1 items-center hover:bg-red-500 hover:text-white border border-red-500 rounded-md p-2">
+                            <img :src="RemoveIconSVG" alt="RemoveIconSVG">
+                        </RouterLink>
+                    </div>
+                    <div class="flex w-full justify-center">
+                        <span class="flex justify-center my-3 text-[20px] font-bold">فاکتور جدید</span>
+                    </div>
                 </div>
-                <div class="flex w-full justify-center">
-                    <span class="flex justify-center my-3 text-[20px] font-bold">فاکتور جدید</span>
-                </div>
-            </div>
 
-            <!-- body -->
-            <div>
-                <div class="flex flex-col col-span-4 mb-3">
-                    <span>فاکتور</span>
-                    <input type="text" class="border rounded outline-none px-1" placeholder="مشخصات فاکتور" v-model="billInfo">
-                </div>
-                <div v-if="billInfo">
-                    <span>لیست کالاهای فاکتور</span>
-                    <div class="w-full grid gap-1 overflow-y-scroll max-h-[300px]"
-                        v-if="billData != null">
-                        <div class="border relative hover:bg-[#c9c9c9] odd:bg-[#f6f6f6]" v-for="(item, index) in billData"
-                            :name="'item' + index" id="itemData" v-bind:key="index">
-                            <div class='flex justify-between items-center pr-3 text-[12px] truncate'>
-                                <button class="flex justify-between w-11/12">
-                                    <span>{{ item.name }}</span>
-                                    <span>{{ item.basePrice != null ? "تومان "+item.basePrice : "بدون قیمت"}}</span>
-                                </button>
-                                <button class='bg-red-500 text-white p-1' @click="removeItemFromList(index)">
-                                    <img :src="RemoveIconSVG" alt="RemoveIconSVG">
-                                </button>
+                <!-- body -->
+                <div>
+                    <div class="flex gap-1 mb-3">
+                        <div class="flex flex-col w-4/5">
+                            <span>فاکتور</span>
+                            <input type="text" class="border rounded outline-none px-1" placeholder="مشخصات فاکتور" v-model="billInfo" @keyup="setDate">
+                        </div>
+                        <div class="flex flex-col w-1/5">
+                            <span>تاریخ</span>
+                            <div class="border rounded px-1 text-center flex items-center" @keyup="setDate">
+                                <input type="text" class="w-full outline-none text-center" placeholder="01" v-model="day">/
+                                <input type="text" class="w-full outline-none text-center" placeholder="01" v-model="month">/
+                                <input type="text" class="w-full outline-none text-center" placeholder="1402" v-model="year">
                             </div>
                         </div>
-                        <button @click="() => {modal = true}" class="border bg-blue-500 text-center hover:bg-blue-600 text-white p-[10px]">
-                            افزودن کالا
+                    </div>
+                    <div v-if="billInfo">
+                        <span>لیست کالاهای فاکتور</span>
+                        <div class="w-full grid gap-1 overflow-y-scroll max-h-[300px]"
+                            v-if="billData != null">
+                            <div class="border relative hover:bg-[#c9c9c9] odd:bg-[#f6f6f6]" v-for="(item, index) in billData"
+                                :name="'item' + index" id="itemData" v-bind:key="index">
+                                <div class='flex justify-between items-center pr-3 text-[12px] truncate'>
+                                    <button class="flex justify-between w-11/12">
+                                        <span>{{ item.name }}</span>
+                                        <span>{{ item.basePrice != null ? "تومان "+item.basePrice : "بدون قیمت"}}</span>
+                                    </button>
+                                    <button class='bg-red-500 text-white p-1' @click="removeItemFromList(index)">
+                                        <img :src="RemoveIconSVG" alt="RemoveIconSVG">
+                                    </button>
+                                </div>
+                            </div>
+                            <button @click="() => {modal = true}" class="border bg-blue-500 text-center hover:bg-blue-600 text-white p-[10px]">
+                                افزودن کالا
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- footer -->
+                <div class="w-full flex flex-col md:flex-row items-center mt-[10px] text-center">
+                    <div class="grid grid-flow-col grid-cols-2 items-center gap-1 w-full mb-1">
+                        <span>جمع کل بدهی:</span>
+                        <span class="text-white bg-red-500 p-[5px]" dir="ltr">{{ costs }}</span>
+                        <span>تومان</span>
+                    </div>
+                    <div class="grid grid-flow-col grid-cols-2 items-center gap-1 w-full">
+                        <span>پرداخت:</span>
+                        <input type="text" v-model="pay" class="text-center border border-blue-500">
+                        <span>تومان</span>
+                    </div>
+                    <div class="w-full flex justify-end mt-[10px] md:mt-0">
+                        <button
+                            @click="postData"
+                            class="border bg-blue-500 hover:bg-blue-600 text-white p-1 w-full rounded"
+                        >
+                            ذخیره
                         </button>
                     </div>
                 </div>
             </div>
-
-            <!-- footer -->
-            <div class="w-full flex items-center mt-[10px] justify-between">
-                <div class='flex gap-3'>
-                    <span>جمع کل:</span>
-                    <span dir='ltr'>{{ costs }}</span>
-                </div>
-                <div class='flex gap-3'>
-                    <span>سود:</span>
-                    <span dir='ltr'>{{ profits }}</span>
-                </div>
-                <button @click="postData"
-                    class="border bg-blue-500 hover:bg-blue-600 text-white p-1 w-1/2 lg:w-[200px] rounded">ذخیره</button>
-            </div>
         </div>
     </div>
-    <AddNewItem v-if="modal" :modal="modal" :data="dbData" :billId="billInfo" @update:modal="updateModal" @set:item="updateItem"></AddNewItem>
+    <AddNewItem v-if="modal" :modal="modal" :data="dbData" :billId="billInfo" :date="date" @update:modal="updateModal" @set:item="updateItem"></AddNewItem>
     <Loading v-if="loading"></Loading>
 </template>
 <style scoped>
 input{
     padding: 5px;
-}</style>
+}
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+</style>

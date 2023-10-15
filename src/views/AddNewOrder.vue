@@ -64,7 +64,10 @@ const getBalanceData = async() =>{
 const putData = async () => {
     loading.value = true
     let id , price , body , dbAmount;
-    if(!amount.value)return;
+    if(!amount.value){
+        loading.value = false
+        return;
+    }
     dbData.value.forEach(item => {
         if(name.value === item.name){
             id = item._id
@@ -72,6 +75,11 @@ const putData = async () => {
             dbAmount = item.amount
         }
     });
+    if(amount.value > dbAmount){
+        loading.value = false
+        message.value = 'مقدار غیر مجاز!'
+        return;
+    }
     let income = parseInt(price) * parseInt(amount.value)
     let outcome = '0'
     let balance = balanceData.value.balance ? (parseInt(balanceData.value.balance) + (income)).toString() : (income).toString()
@@ -143,7 +151,7 @@ getData()
 </script>
 <template>
     <!-- add new sells or return -->
-    <div class="w-full p-[20px] relative">
+    <div class="w-full py-[20px] relative">
     <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
         {{message}}
         <i>x</i>
