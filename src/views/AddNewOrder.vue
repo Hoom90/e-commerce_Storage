@@ -20,6 +20,7 @@ const loading = ref(false)
 let name = ref(null)
 let amount = ref(null)
 let type = ref(null)
+let credit = ref(null)
 const getData = async () => {
     loading.value = true
     await getDBData()
@@ -83,12 +84,16 @@ const putData = async () => {
     let income = parseInt(price) * parseInt(amount.value)
     let outcome = '0'
     let balance = balanceData.value.balance ? (parseInt(balanceData.value.balance) + (income)).toString() : (income).toString()
+    let description = 'فروش کالا'
+    if(credit.value){
+        description = 'نسیه کالا به ' + credit.value
+    }
     amount.value = dbAmount - amount.value
     body = {
         'income': income,
         'outcome': outcome,
         'balance': balance,
-        'description' : 'فروش کالا',
+        'description' : description,
         'amount': amount.value.toString(),
         'date': dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
     }
@@ -152,10 +157,10 @@ getData()
 <template>
     <!-- add new sells or return -->
     <div class="w-full py-[20px] relative">
-    <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
-        {{message}}
-        <i>x</i>
-    </button>
+        <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
+            {{message}}
+            <i>x</i>
+        </button>
         <div class="max-w-[400px] mx-auto my-[20px] border rounded-md p-[10px]">
             <!-- header -->
             <div class="flex justify-center">
@@ -189,7 +194,7 @@ getData()
                     </button>
                 </div>
             </div>
-            <div class="flex justify-center gap-1 my-1 border rounded-md p-3" v-if="dbData == null">
+            <div class="flex justify-center gap-1 my-1 border rounded-md p-3" v-if="dbData.length == 0">
                 هیچ کالایی یافت نشد
             </div>
 
@@ -212,6 +217,10 @@ getData()
                             <img :src="MinusIconSVG" alt="MinusIconSVG">
                         </button>
                     </div>
+                </div>
+                <div class='flex flex-col gap-1'>
+                    <span>نسیه</span>
+                    <input type="text" class="border rounded outline-blue-300 px-1" placeholder="به چه کسی نسیه داده شده است" v-model="credit" :disabled="amount ? false : true">
                 </div>
             </div>
 

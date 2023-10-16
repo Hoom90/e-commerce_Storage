@@ -20,6 +20,7 @@ let dbBalance = ref(null)
 let profit = ref(null)
 let spend = ref(null)
 let balance = ref(null)
+let credit = ref(0)
 let mostSell = ref(null)
 const getData = async() => {
     loading.value = true
@@ -30,6 +31,7 @@ const getData = async() => {
     setSpend()
     setBalance()
     setMostSell()
+    setCredit()
     loading.value = false
 }
 
@@ -39,6 +41,17 @@ const getAccountancyData = async() =>{
     (res)=>{
         if(res.data.length != 0){
             dbAccountData.value = res.data
+            dbAccountData.value.forEach(data => {
+                if(!data.personName){
+                    data.personName = 'شما'
+                }
+                if(!data.cost){
+                    data.cost = ((data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0)).toString()
+                }
+                if(data.description.split(' ')[0] === 'نسیه'){
+                    data.cost = null
+                }
+            });
         }
         else{
             dbAccountData.value = null
@@ -86,7 +99,7 @@ const setProfit = () =>{
             else if(parseInt(dbAccountData.value[i].cost) > 0){
                 profit.value = parseInt(profit.value) + parseInt(dbAccountData.value[i].cost)
             }
-        }     
+        }
     }
 }
 
@@ -125,6 +138,20 @@ const setDebt = () =>{
         outcome,
         balance,
         'date' : dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
+    }
+}
+
+const setCredit = () =>{
+    credit.value =0
+    if(dbAccountData.value){
+        for (let i = 0; i < dbAccountData.value.length; i++) {
+            if(dbAccountData.value[i].description.split(' ')[0] == 'نسیه'){
+                credit.value = 
+                parseInt(credit.value)
+                + parseInt(dbAccountData.value[i].card ? dbAccountData.value[i].card : '0') 
+                + parseInt(dbAccountData.value[i].cash ? dbAccountData.value[i].cash : '0')
+            }
+        }
     }
 }
 
@@ -181,12 +208,9 @@ getData()
                 <div class="overflow-y-auto" v-if="dbAccountData">
                     <div v-for="(data,index) in dbAccountData" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" v-bind:key='index'>
                         <div class="grid grid-flow-col grid-cols-5 w-full p-1 border-b">
-                            <span class="col-span-2 text-[12px] truncate">{{ data.personName ? data.personName:"شما" }}</span>
+                            <span class="col-span-2 text-[12px] truncate">{{ data.personName }}</span>
                             <span v-if='data.cost' dir="ltr">{{ data.cost }}</span>
-                            <span v-if='data.cash || data.card' dir="ltr">
-                            {{ (data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0) }}
-                            </span>
-                            <span class="col-span-2 text-[12px] truncate">{{ data.description }}</span>
+                            <span :class="data.cost ? 'col-span-2 text-[12px] truncate' : 'col-span-3 text-[12px]' ">{{ data.description }}</span>
                         </div>
                     </div>
                 </div>
@@ -213,7 +237,7 @@ getData()
                 </div>
             </div>
 
-            <div class="border lg:w-3/12 min-h-[200px] overflow-auto lg:max-h-none bg-white" v-if="mostSell">
+            <div class="border lg:w-3/12 min-h-[200px] overflow-auto lg:max-h-none bg-white">
                 <div class="border-b items-center">کالاهای پرفروش روز</div>
                 <div class="overflow-y-auto">
                     <div v-for="(data,index) in mostSell" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" v-bind:key="index">
@@ -223,32 +247,56 @@ getData()
                         </div>
                     </div>
                 </div>
+                <div v-if="!mostSell" class="h-[80%] flex justify-center items-center">
+                    کالایی جابه جا نشده است
+                </div>
             </div>
 
             <div class="lg:w-3/12 flex flex-col lg:flex-col gap-1">
                 
-                <div class="border" v-if="profit">
-                    <div class="border-b items-center">فروش و درآمد امروز</div>
+                <div class="border">
+                    <div class="border-b items-center">فروش امروز</div>
                     <div class="bg-[#f6f6f6] hover:bg-[#e9e9e9]">
                         {{ profit }}
                     </div>
                 </div>
 
-                <div class="border" v-if="spend">
+                <div class="border">
+                    <div class="border-b items-center">سود امروز</div>
+                    <div class="bg-[#f6f6f6] hover:bg-[#e9e9e9]">
+                        0
+                    </div>
+                </div>
+
+                <div class="border">
+                    <div class="border-b items-center">ضرر امروز</div>
+                    <div class="bg-[#f6f6f6] hover:bg-[#e9e9e9]">
+                        0
+                    </div>
+                </div>
+
+                <div class="border">
                     <div class="border-b items-center">خرج امروز</div>
                     <div class="bg-[#f6f6f6] hover:bg-[#e9e9e9]">
                         {{ spend }}
                     </div>
                 </div>
 
-                <div class="border" v-if="dbBalance">
+                <div class="border">
+                    <div class="border-b items-center">نسیه امروز</div>
+                    <div class="bg-[#f6f6f6] hover:bg-[#e9e9e9]">
+                        {{ credit }}
+                    </div>
+                </div>
+
+                <div class="border">
                     <div class="border-b items-center">بدهی امروز</div>
-                    <div class="bg-[#f6f6f6] hover:bg-[#e9e9e9]" dir="ltr">
+                    <div class="bg-[#f6f6f6] hover:bg-[#e9e9e9]" dir="ltr" v-if="dbBalance">
                         {{ dbBalance.outcome }}
                     </div>
                 </div>
 
-                <div class="border" v-if="balance">
+                <div class="border">
                     <div class="border-b items-center">حساب امروز</div>
                     <div class="text-white" :class="balance < 0 ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'" dir="ltr">
                         {{ balance }}

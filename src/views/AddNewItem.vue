@@ -37,9 +37,7 @@ const getItems = async () => {
   await axios
     .get(serverURL + "/api/itemTransaction/")
     .then((res) => {
-      if(res.data.length != 0){
         dbData.value = res.data;
-      }
     })
     .catch(function (error) {
       console.log(error);
@@ -356,7 +354,7 @@ getData();
       <!-- body -->
       <div class="h-[340px] overflow-auto">
         <!-- search -->
-        <div class="flex flex-col gap-1 my-1" v-if="dbData != null">
+        <div class="flex flex-col gap-1 my-1">
           <!-- search input -->
           <div class="flex gap-1 items-center border rounded px-1">
             <input
@@ -365,7 +363,7 @@ getData();
               class="outline-none min-w-[300px] w-full"
               placeholder="جستجو در بین کالاهای موجود"
               @keyup="searchWord"
-            />
+             :disabled='dbData.length != 0 ? false : true'/>
             <img :src="SearchIconSVG" alt="SearchIconSVG" />
           </div>
           <!-- search result -->
@@ -389,7 +387,7 @@ getData();
             </button>
           </div>
         </div>
-        <div class="flex justify-center gap-1 my-1 border rounded-md p-2" v-if="dbData">
+        <div class="flex justify-center gap-1 my-1 border rounded-md p-2" v-if="dbData.length == 0">
           هیچ کالایی یافت نشد
         </div>
 
