@@ -1,4 +1,6 @@
 <script setup>
+import store from '../store';
+
 import ArrowIconSVG from "../assets/arrowLeftIcon.svg";
 import SearchIconSVG from "../assets/searchIcon.svg";
 import { ref } from "vue";
@@ -108,7 +110,7 @@ const postData = async () => {
   await axios
     .post(serverURL + "/api/itemTransaction", body, {
       headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
+        Authorization: "Bearer " + getWithExpiry("token"),
       },
     })
     .then(res =>{
@@ -315,6 +317,28 @@ const formatData = (data) => {
     return (data = data.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
   }
 };
+
+function getWithExpiry(key) {
+  const itemStr = localStorage.getItem(key);
+
+  // if the item doesn't exist, return null
+  if (!itemStr) {
+    return null;
+  }
+
+  const item = JSON.parse(itemStr);
+  const now = new Date();
+
+  // compare the expiry time of the item with the current time
+  if (now.getTime() > item.expiry) {
+    // If the item is expired, delete the item from storage
+    // and return null
+    store.dispatch("auth/logout");
+    router.push("/login");
+    return null;
+  }
+  return item.value;
+}
 
 getData();
 </script>

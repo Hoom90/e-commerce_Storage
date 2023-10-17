@@ -1,4 +1,6 @@
 <script setup>
+import store from '../store';
+
 import axios from 'axios';
 import { ref } from 'vue'
 import Loading from '../components/loading.vue'
@@ -147,7 +149,7 @@ const patchData = async (index) =>{
     axios.patch(serverURL + "/api/balanceLogs/" + id, body,
     {
         headers: {
-        'Authorization': 'Bearer ' +  localStorage.getItem('token'),
+        'Authorization': 'Bearer ' +  getWithExpiry('token'),
         'Accept': 'application/json',
         'Content-Type': 'application/json'
     }
@@ -218,6 +220,28 @@ const handleLogs = (index) =>{
     else{
         document.getElementById("form"+index).classList.replace('grid','hidden')
     }
+}
+
+function getWithExpiry(key) {
+  const itemStr = localStorage.getItem(key);
+
+  // if the item doesn't exist, return null
+  if (!itemStr) {
+    return null;
+  }
+
+  const item = JSON.parse(itemStr);
+  const now = new Date();
+
+  // compare the expiry time of the item with the current time
+  if (now.getTime() > item.expiry) {
+    // If the item is expired, delete the item from storage
+    // and return null
+    store.dispatch("auth/logout");
+    router.push("/login");
+    return null;
+  }
+  return item.value;
 }
 
 getData()

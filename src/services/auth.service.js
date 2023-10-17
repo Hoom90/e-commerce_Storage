@@ -27,7 +27,14 @@ class AuthService {
       })
       .then((data) => {
         if (data.token) {
-          localStorage.setItem("token", data.token);
+          const now = new Date();
+          let value = data.token;
+          const item = {
+            value: value,
+            expiry: now.getTime() + 43200000, // token will expire in 12 hours
+            // expiry: now.getTime() + 5000, // token will expire in 5 seconds
+          };
+          localStorage.setItem("token", JSON.stringify(item));
         }
         return data;
       });

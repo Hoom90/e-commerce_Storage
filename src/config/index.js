@@ -1,3 +1,5 @@
+import store from "../store";
+
 import { createRouter, createWebHistory } from "vue-router";
 import LoginView from "../views/LoginView.vue";
 import HomeView from "../views/HomeView.vue";
@@ -62,7 +64,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const publicPages = ["/login"];
   const authRequired = !publicPages.includes(to.path);
-  const loggedIn = localStorage.getItem("token");
+  const loggedIn = getWithExpiry("token");
   // trying to access a restricted page + not logged in
   // redirect to login page
   if (authRequired && !loggedIn) {
@@ -72,3 +74,25 @@ router.beforeEach((to, from, next) => {
   }
 });
 export default router;
+
+function getWithExpiry(key) {
+  const itemStr = localStorage.getItem(key);
+
+  // if the item doesn't exist, return null
+  if (!itemStr) {
+    return null;
+  }
+
+  const item = JSON.parse(itemStr);
+  const now = new Date();
+
+  // compare the expiry time of the item with the current time
+  if (now.getTime() > item.expiry) {
+    // If the item is expired, delete the item from storage
+    // and return null
+    store.dispatch("auth/logout");
+    router.push("/login");
+    return null;
+  }
+  return item.value;
+}

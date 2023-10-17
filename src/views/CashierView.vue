@@ -1,4 +1,7 @@
 <script setup>
+import store from '../store';
+import router from '../config';
+
 import { ref } from 'vue'
 import Loading from '../components/loading.vue'
 import serverURL from '../config/serverAddress'
@@ -96,7 +99,7 @@ const postOutcome = async() => {
     };
     await axios.post(serverURL + "/api/balanceTransaction/",body,{
         headers: {
-        'Authorization': 'Bearer ' + localStorage.getItem('token'),
+        'Authorization': 'Bearer ' + getWithExpiry('token'),
         'Accept': 'application/json',
         'Content-Type': 'application/json'
         }
@@ -138,7 +141,7 @@ const postIncome = async() =>{
     };
     await axios.post(serverURL + "/api/balanceTransaction/",body,{
         headers: {
-        'Authorization': 'Bearer ' + localStorage.getItem('token'),
+        'Authorization': 'Bearer ' + getWithExpiry('token'),
         'Accept': 'application/json',
         'Content-Type': 'application/json'
         }
@@ -184,7 +187,7 @@ const deleteData = async (index) =>{
         method: "DELETE",
         body: JSON.stringify(body),
         headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('token'),
+            'Authorization': 'Bearer ' + getWithExpiry('token'),
             'Content-Type': 'application/json'
         }
     })
@@ -200,6 +203,28 @@ const deleteData = async (index) =>{
             getData()
         }
     })
+}
+
+function getWithExpiry(key) {
+  const itemStr = localStorage.getItem(key);
+
+  // if the item doesn't exist, return null
+  if (!itemStr) {
+    return null;
+  }
+
+  const item = JSON.parse(itemStr);
+  const now = new Date();
+
+  // compare the expiry time of the item with the current time
+  if (now.getTime() > item.expiry) {
+    // If the item is expired, delete the item from storage
+    // and return null
+    store.dispatch("auth/logout");
+    router.push("/login");
+    return null;
+  }
+  return item.value;
 }
 
 getData()
