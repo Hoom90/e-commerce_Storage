@@ -249,6 +249,10 @@ getData()
                 <p>وضعیت دخل امروز: <span dir="ltr">{{ balanceData.balance ? balanceData.balance.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0' }}</span> تومان</p>
             </div>
 
+            <ul class="text-[12px] px-[20px]">
+                <li class="text-red-500">* حذف تراکنش <span class="underline underline-offset-8">خرید و فروش کالا</span> باعث بهم ریختگی آمار انبار و صندوق میشود!</li>
+            </ul>
+
             <!-- table -->
             <div class="w-[90%] md:m-5 md:mx-10 md:h-[50vh] lg:h-[55vh] mx-auto mb-40">
                 <div class="grid grid-flow-col grid-cols-12 border-b bg-white">

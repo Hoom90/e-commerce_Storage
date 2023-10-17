@@ -66,7 +66,7 @@ const getBalanceData = async() =>{
 
 const putData = async () => {
     loading.value = true
-    let id , price , body , dbAmount;
+    let id , price , body , dbAmount , profit;
     if(!amount.value){
         loading.value = false
         return;
@@ -76,6 +76,7 @@ const putData = async () => {
             id = item._id
             price = item.price
             dbAmount = item.amount
+            profit = item.profit
         }
     });
     if(amount.value > dbAmount){
@@ -96,6 +97,7 @@ const putData = async () => {
         'outcome': outcome,
         'balance': balance,
         'description' : description,
+        'profit' : profit,
         'amount': amount.value.toString(),
         'date': dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
     }
@@ -218,7 +220,7 @@ getData()
                     </button>
                 </div>
             </div>
-            <div class="flex justify-center gap-1 my-1 border rounded-md p-3" v-if="dbData.length == 0">
+            <div class="flex justify-center gap-1 my-1 border rounded-md p-3" v-if="dbData != null && dbData.length == 0">
                 هیچ کالایی یافت نشد
             </div>
 

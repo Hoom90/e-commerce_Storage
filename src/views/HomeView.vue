@@ -17,21 +17,25 @@ let dbAccountData = ref([])
 let dbWarehouseData = ref([])
 let dbBalance = ref(null)
 
-let profit = ref(null)
 let spend = ref(null)
-let balance = ref(null)
-let credit = ref(0)
 let mostSell = ref(null)
+let sells = ref(0)
+let balance = ref(0)
+let loss = ref(0)
+let benefit = ref(0)
+let credit = ref(0)
 const getData = async() => {
     loading.value = true
     await getAccountancyData()
     await getWarehouseData()
     await getBalance()
-    setProfit()
+    setSells()
     setSpend()
     setBalance()
     setMostSell()
     setCredit()
+    setLoss()
+    setBenefit()
     loading.value = false
 }
 
@@ -47,6 +51,7 @@ const getAccountancyData = async() =>{
                 }
                 if(!data.cost){
                     data.cost = ((data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0)).toString()
+                    data.cost = formatData(data.cost)
                 }
                 if(data.description.split(' ')[0] === 'نسیه'){
                     data.cost = null
@@ -86,21 +91,22 @@ const getBalance = async () =>{
     .catch(function (error) { console.log(error),loading.value = false,message.value=error})
 }
 
-const setProfit = () =>{
-    profit.value =0
+const setSells = () =>{
+    sells.value =0
     if(dbAccountData.value){
         for (let i = 0; i < dbAccountData.value.length; i++) {
             if(parseInt(dbAccountData.value[i].card) > 0){
-                profit.value = parseInt(profit.value) + parseInt(dbAccountData.value[i].card)
+                sells.value = parseInt(sells.value) + parseInt(dbAccountData.value[i].card)
             }
             else if(parseInt(dbAccountData.value[i].cash) > 0){
-                profit.value = parseInt(profit.value) + parseInt(dbAccountData.value[i].cash)
+                sells.value = parseInt(sells.value) + parseInt(dbAccountData.value[i].cash)
             }
             else if(parseInt(dbAccountData.value[i].cost) > 0){
-                profit.value = parseInt(profit.value) + parseInt(dbAccountData.value[i].cost)
+                sells.value = parseInt(sells.value) + parseInt(dbAccountData.value[i].cost)
             }
         }
     }
+    sells.value = formatData(sells.value)
 }
 
 const setSpend = () =>{
@@ -119,6 +125,7 @@ const setSpend = () =>{
         }        
         spend.value = spend.value.toString()
     }
+    spend.value = formatData(spend.value)
 }
 
 const setDebt = () =>{
@@ -133,6 +140,9 @@ const setDebt = () =>{
     else{
         balance = parseInt(income) - parseInt(outcome)
     }
+    income = formatData(income)
+    outcome = formatData(outcome)
+    balance = formatData(balance)
     dbBalance = {
         income,
         outcome,
@@ -153,11 +163,13 @@ const setCredit = () =>{
             }
         }
     }
+    credit.value = formatData(credit.value)
 }
 
 const setBalance = () =>{
     balance.value = 0
-    balance.value = profit.value - spend.value
+    balance.value = parseInt(sells.value.replace(',','')) - parseInt(spend.value.replace(',',''))
+    balance.value = formatData(balance.value)
 }
 
 const setMostSell = () =>{
@@ -187,6 +199,40 @@ const setMostSell = () =>{
         mostSell.value = topSells
     }
 }
+
+const setLoss = () =>{
+    loss.value = 0
+    for(let i=0;i<dbWarehouseData.value.length;i++){
+        if(dbWarehouseData.value[i].oldVal){
+            let amount = parseInt(dbWarehouseData.value[i].oldVal) - parseInt(dbWarehouseData.value[i].newVal)
+            let profit = parseInt(dbWarehouseData.value[i].profit)
+            if(profit * amount < 0){
+                loss.value = parseInt(loss.value) + (profit * amount)
+            }
+        }
+    }
+    loss.value = loss.value * -1
+    loss.value = formatData(loss.value)
+}
+
+const setBenefit = () =>{
+    benefit.value = 0
+    for(let i=0;i<dbWarehouseData.value.length;i++){
+        if(dbWarehouseData.value[i].oldVal){
+            let amount = parseInt(dbWarehouseData.value[i].oldVal) - parseInt(dbWarehouseData.value[i].newVal)
+            let profit = parseInt(dbWarehouseData.value[i].profit)
+            if(profit * amount > 0){
+                benefit.value = parseInt(benefit.value) + (profit * amount)
+            }
+        }
+    }
+    benefit.value = formatData(benefit.value)
+}
+
+// turn string to currency
+const formatData = (data) => {
+  return (data = data.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+};
 
 getData()
 </script>
@@ -257,21 +303,21 @@ getData()
                 <div class="border">
                     <div class="border-b items-center">فروش امروز</div>
                     <div class="bg-[#f6f6f6] hover:bg-[#e9e9e9]">
-                        {{ profit }}
+                        {{ sells }}
                     </div>
                 </div>
 
                 <div class="border">
                     <div class="border-b items-center">سود امروز</div>
                     <div class="bg-[#f6f6f6] hover:bg-[#e9e9e9]">
-                        0
+                        {{ benefit }}
                     </div>
                 </div>
 
                 <div class="border">
                     <div class="border-b items-center">ضرر امروز</div>
                     <div class="bg-[#f6f6f6] hover:bg-[#e9e9e9]">
-                        0
+                        {{ loss }}
                     </div>
                 </div>
 
