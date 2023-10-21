@@ -102,7 +102,7 @@ const putData = async () => {
         'date': dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
     }
     await axios.put(serverURL + "/api/itemTransaction/" + id, body,{headers: {
-        'Authorization': 'Bearer ' + getWithExpiry('token'),
+        'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
     }})
     .catch((error) => {
         console.log(error);
@@ -154,28 +154,6 @@ const handleDecrease = () =>{
             amount.value = parseInt(amount.value) - 1
         }
     }
-}
-
-function getWithExpiry(key) {
-  const itemStr = localStorage.getItem(key);
-
-  // if the item doesn't exist, return null
-  if (!itemStr) {
-    return null;
-  }
-
-  const item = JSON.parse(itemStr);
-  const now = new Date();
-
-  // compare the expiry time of the item with the current time
-  if (now.getTime() > item.expiry) {
-    // If the item is expired, delete the item from storage
-    // and return null
-    store.dispatch("auth/logout");
-    router.push("/login");
-    return null;
-  }
-  return item.value;
 }
 
 getData()

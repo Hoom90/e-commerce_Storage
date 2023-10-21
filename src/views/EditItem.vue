@@ -113,7 +113,7 @@ const patchData  = async() =>{
     }
     await axios.patch(serverURL + "/api/itemTransaction/" + route.currentRoute.value.params.id, body, {
         headers: {
-            'Authorization': 'Bearer ' + getWithExpiry('token'),
+            'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
         }
     })
     .catch((error) => {
@@ -143,7 +143,7 @@ const deleteData  = async() =>{
         method: "DELETE",
         body: JSON.stringify(body),
         headers: {
-            'Authorization': 'Bearer ' + getWithExpiry('token'),
+            'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
             "Content-Type": "application/json",
         }
     })
@@ -211,28 +211,6 @@ const calculator = () =>{
         profitxamount.classList.replace("border-red-500","border-gray-50")
         profitxamount.classList.replace("border-green-500","border-gray-50")
     }
-}
-
-function getWithExpiry(key) {
-  const itemStr = localStorage.getItem(key);
-
-  // if the item doesn't exist, return null
-  if (!itemStr) {
-    return null;
-  }
-
-  const item = JSON.parse(itemStr);
-  const now = new Date();
-
-  // compare the expiry time of the item with the current time
-  if (now.getTime() > item.expiry) {
-    // If the item is expired, delete the item from storage
-    // and return null
-    store.dispatch("auth/logout");
-    router.push("/login");
-    return null;
-  }
-  return item.value;
 }
 
 getData()

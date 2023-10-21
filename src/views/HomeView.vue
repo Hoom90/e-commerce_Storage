@@ -202,31 +202,35 @@ const setMostSell = () =>{
 
 const setLoss = () =>{
     loss.value = 0
-    for(let i=0;i<dbWarehouseData.value.length;i++){
-        if(dbWarehouseData.value[i].oldVal){
-            let amount = parseInt(dbWarehouseData.value[i].oldVal) - parseInt(dbWarehouseData.value[i].newVal)
-            let profit = parseInt(dbWarehouseData.value[i].profit)
-            if(profit * amount < 0){
-                loss.value = parseInt(loss.value) + (profit * amount)
+    if(dbWarehouseData.value){
+        for(let i=0;i<dbWarehouseData.value.length;i++){
+            if(dbWarehouseData.value[i].oldVal){
+                let amount = parseInt(dbWarehouseData.value[i].oldVal) - parseInt(dbWarehouseData.value[i].newVal)
+                let profit = parseInt(dbWarehouseData.value[i].profit)
+                if(profit * amount < 0){
+                    loss.value = parseInt(loss.value) + (profit * amount)
+                }
             }
         }
+        loss.value = loss.value * -1
+        loss.value = formatData(loss.value)
     }
-    loss.value = loss.value * -1
-    loss.value = formatData(loss.value)
 }
 
 const setBenefit = () =>{
     benefit.value = 0
-    for(let i=0;i<dbWarehouseData.value.length;i++){
-        if(dbWarehouseData.value[i].oldVal){
-            let amount = parseInt(dbWarehouseData.value[i].oldVal) - parseInt(dbWarehouseData.value[i].newVal)
-            let profit = parseInt(dbWarehouseData.value[i].profit)
-            if(profit * amount > 0){
-                benefit.value = parseInt(benefit.value) + (profit * amount)
+    if(dbWarehouseData.value){
+        for(let i=0;i<dbWarehouseData.value.length;i++){
+            if(dbWarehouseData.value[i].oldVal){
+                let amount = parseInt(dbWarehouseData.value[i].oldVal) - parseInt(dbWarehouseData.value[i].newVal)
+                let profit = parseInt(dbWarehouseData.value[i].profit)
+                if(profit * amount > 0){
+                    benefit.value = parseInt(benefit.value) + (profit * amount)
+                }
             }
         }
+        benefit.value = formatData(benefit.value)
     }
-    benefit.value = formatData(benefit.value)
 }
 
 // turn string to currency
