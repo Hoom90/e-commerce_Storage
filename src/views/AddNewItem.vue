@@ -7,6 +7,7 @@ import { ref } from "vue";
 import Loading from "../components/loading.vue";
 import serverURL from "../config/serverAddress";
 import router from "../config";
+import Form1 from '../components/form1.vue'
 import axios from "axios";
 import dayjs from "dayjs";
 import jalaliday from "jalaliday";
@@ -30,7 +31,7 @@ const init = ref(true);
 const getData = async () => {
   loading.value = true;
   await getItems();
-  await getBalance();
+  // await getBalance();
   loading.value = false;
 };
 
@@ -57,8 +58,9 @@ const getBalance = async () => {
         dayjs().calendar("jalali").locale("fa").format("YYYY-MM-DD")
     )
     .then((res) => {
+      console.log(res.data);
       balanceData.value = res.data;
-      calculateBalance();
+      // calculateBalance();
     })
     .catch(function (error) {
       console.log(error), (loading.value = false), (message.value = error);
@@ -123,11 +125,11 @@ const postData = async () => {
     .finally((loading.value = false));
 };
 
-const searchBox = ref(null);
 const searchWord = () => {
   // Declare variables
   let filter, li, a, i, txtValue;
-  filter = searchBox.value.value.toUpperCase();
+  let search = document.querySelector('#TableSearchBox')
+  filter = search.value.toUpperCase();
   li = document.querySelectorAll("#itemData");
   // Loop through all list items, and hide those who don't match the search query
   for (i = 0; i < li.length; i++) {
@@ -318,83 +320,60 @@ const formatData = (data) => {
   }
 };
 
+const handleErrorClose = () =>{
+  message.value = null;
+}
+
 getData();
 </script>
 <template>
   <!-- single add -->
   <div class="w-full p-[20px] relative">
-    <button
-      class="absolute w-[97%] flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]"
-      v-if="message"
-      @click="
-        () => {
-          message = null;
-        }
-      "
-    >
+    <button class="absolute w-[97%] flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="handleErrorClose">
       {{ message }}
       <i>x</i>
     </button>
-    <div class="max-w-[800px] mx-auto mt-[20px] border rounded-md p-[10px]">
+    <div class="mx-auto mt-[20px] border rounded-md p-[10px]">
       <!-- header -->
-      <div class="flex justify-center">
-        <div class="flex items-center">
-          <RouterLink
-            to="/warehouse"
-            class="flex gap-1 items-center hover:bg-blue-500 w-[100px] hover:text-white border border-blue-500 rounded-md px-2 p-1"
-          >
+      <div class="flex justify-center relative">
+        <div class="absolute top-[10px] right-0">
+          <RouterLink to="/warehouse" class="flex gap-1 items-center bg-white hover:bg-blue-500 hover:text-white border border-blue-500 rounded-md px-2 p-1">
             <img :src="ArrowIconSVG" alt="ArrowIconSVG" />
-            برگشتن
+            برگشتن به انبارداری
           </RouterLink>
         </div>
         <div class="flex w-full justify-center">
-          <span class="flex justify-center my-3 text-[20px] font-bold"
-            >افزودن کالا</span
-          >
+          <span class="flex justify-center my-3 text-[20px] font-bold">افزودن تک کالا</span>
         </div>
       </div>
       <!-- body -->
-      <div class="h-[340px] overflow-auto">
+      <div class="h-[340px] flex flex-col lg:flex-row gap-1 overflow-auto">
         <!-- search -->
-        <div class="flex flex-col gap-1 my-1">
+        <div class="lg:w-1/3 border rounded">
           <!-- search input -->
-          <div class="flex gap-1 items-center border rounded px-1">
-            <input
-              type="text"
-              ref="searchBox"
-              class="outline-none min-w-[300px] w-full"
-              placeholder="جستجو در بین کالاهای موجود"
-              @keyup="searchWord"
-             :disabled='dbData.length != 0 ? false : true'/>
-            <img :src="SearchIconSVG" alt="SearchIconSVG" />
+          <div class="">
+            <div class="flex gap-1 items-center rounded px-1">
+              <input type="text" id="TableSearchBox" class="outline-none min-w-[300px] w-full" placeholder="جستجو در بین کالاهای موجود" @input="searchWord"/>
+              <img :src="SearchIconSVG" alt="SearchIconSVG" />
+            </div>
+            <!-- search result -->
+            <div class="w-full grid overflow-y-scroll max-h-[80px]">
+              <button class="border border-gray-200 hover:bg-[#c9c9c9]" v-for="(item, index) in dbData" @click="duplicateItemData(index)"
+                :name="'item' + index" id="itemData" v-bind:key="index">
+                <div class="flex justify-between gap-1 p-[10px] text-[12px]">
+                  <span>{{ item.name }}</span>
+                  <span dir="ltr">{{ item.salesPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</span>
+                </div>
+              </button>
+            </div>
           </div>
-          <!-- search result -->
-          <div class="w-full grid overflow-y-scroll max-h-[80px]">
-            <button
-              class="border border-gray-200 hover:bg-[#c9c9c9] odd:bg-[#f6f6f6]"
-              v-for="(item, index) in dbData"
-              @click="duplicateItemData(index)"
-              :name="'item' + index"
-              id="itemData"
-              v-bind:key="index"
-            >
-              <div
-                class="flex justify-between gap-1 p-[10px] text-[12px] truncate"
-              >
-                <span>{{ item.name }}</span>
-                <span dir="ltr">{{
-                  item.price ? "تومان " + item.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "بدون قیمت"
-                }}</span>
-              </div>
-            </button>
+          <div class="flex justify-center gap-1 my-1 border rounded-md p-2" v-if="dbData.length == 0">
+            هیچ کالایی یافت نشد
           </div>
         </div>
-        <div class="flex justify-center gap-1 my-1 border rounded-md p-2" v-if="dbData.length == 0">
-          هیچ کالایی یافت نشد
-        </div>
-
         <!-- form -->
-        <div>
+        <Form1/>
+        <!-- <div class="lg:w-2/3 lg:border rounded lg:p-[20px]">
           <div class="flex flex-col">
             <p>نام<span class="text-red-500">*</span></p>
             <input
@@ -508,7 +487,7 @@ getData();
               </div>
             </div>
           </div>
-        </div>
+        </div> -->
       </div>
       <!-- footer -->
       <div class="w-full flex items-center mt-[10px] text-center">
