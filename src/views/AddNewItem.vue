@@ -13,30 +13,29 @@ import dayjs from "dayjs";
 import jalaliday from "jalaliday";
 dayjs.extend(jalaliday);
 
-let name = ref(null);
-let weight = ref('گرم');
-let basePrice = ref(0);
-let price = ref(0);
-let profit = ref(null);
-let amount = ref(null);
-let billId = ref(null);
-let date = ref(ref(dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')));
+
+let item = {
+  name:'',
+  sellerName:'',
+  company:'',
+  purchasePrice:'',
+  salesPrice:'',
+  amount:'',
+  unit:'',
+  date:'',
+  paid:'',
+  type:'',
+  description:'',
+}
 
 const dbData = ref(null);
-const balanceData = ref(null);
 const loading = ref(false);
 const message = ref(null);
 const init = ref(true);
 
+//#region API
 const getData = async () => {
   loading.value = true;
-  await getItems();
-  // await getBalance();
-  loading.value = false;
-};
-
-// Get All Data
-const getItems = async () => {
   await axios
     .get(serverURL + "/api/itemTransaction/")
     .then((res) => {
@@ -47,84 +46,74 @@ const getItems = async () => {
       message.value = error;
       loading.value = false;
     });
-};
-
-// Get Last Balance
-const getBalance = async () => {
-  await axios
-    .get(
-      serverURL +
-        "/api/balanceTransaction/" +
-        dayjs().calendar("jalali").locale("fa").format("YYYY-MM-DD")
-    )
-    .then((res) => {
-      console.log(res.data);
-      balanceData.value = res.data;
-      // calculateBalance();
-    })
-    .catch(function (error) {
-      console.log(error), (loading.value = false), (message.value = error);
-    });
-};
-
-const calculateBalance = () => {
-  let income = 0,
-    outcome = 0,
-    balance = 0;
-  balanceData.value.forEach((item) => {
-    income += parseInt(item.income);
-    outcome += parseInt(item.outcome);
-  });
-  if (parseInt(outcome) < 0) {
-    balance = parseInt(income) + parseInt(outcome);
-  } else {
-    balance = parseInt(income) - parseInt(outcome);
-  }
-  balanceData.value = {
-    income,
-    outcome,
-    balance,
-    date: dayjs().calendar("jalali").locale("fa").format("YYYY/MM/DD"),
-  };
-};
-
+  loading.value = false;
+}
 const postData = async () => {
   loading.value = true;
-  let debtBalance = document.getElementById('debtBalance').innerText.replace(',','')
-  let debtPay = document.getElementById('debtPay').value.replace(',','')
-  let outcome = parseInt(debtBalance) - parseInt(debtPay)
-  let balance = balanceData.value.balance ? parseInt(balanceData.value.balance) - outcome : -outcome
-  const body = {
-    'outcome': (-outcome).toString(),
-    'balance': balance.toString(),
-    'card': (debtPay * -1).toString(),
-    'description': 'خرید کالا',
-    'name': name.value,
-    'weight': weight.value,
-    'basePrice': basePrice.value,
-    'price': price.value,
-    'profit': profit.value.toString(),
-    'amount': amount.value,
-    'billId': billId.value,
-    'date': date.value,
-  };
-  // console.log(body);
-  await axios
-    .post(serverURL + "/api/itemTransaction", body, {
+  const body = item
+  await axios.post(serverURL + "/api/itemTransaction", body, {
       headers: {
         Authorization: "Bearer " + sessionStorage.getItem("token"),
       },
     })
-    .then(res =>{
+    .then(
       router.push("/warehouse")
-    })
+    )
     .catch((error) => {
       console.log(error);
       message.value = error;
     })
     .finally((loading.value = false));
+}
+//#endregion
+
+//#region duplicate date
+const duplicateItemData = (index) => {
+  setDuplicatedData(index);
+  setDuplicateEffect(index)
 };
 
+const setDuplicatedData = (index) => {
+  item = {
+    name:dbData.value[index].name,
+    sellerName:dbData.value[index].sellerName,
+    company:dbData.value[index].company,
+    purchasePrice:dbData.value[index].purchasePrice,
+    salesPrice:dbData.value[index].salesPrice,
+    amount:dbData.value[index].amount,
+    unit:dbData.value[index].unit,
+    date:dbData.value[index].date,
+    paid:dbData.value[index].amount*dbData.value[index].purchasePrice,
+    type:"چک",
+    description:'',
+  }
+};
+
+const setDuplicateEffect =(index) =>{
+  let result = item.purchasePrice * item.amount
+  document.querySelectorAll('#FullDebt')[0].innerText = formatData(result)
+  document.querySelectorAll('#Paid')[0].value = formatData(result)
+  let length = dbData.value.length;
+  for (let i = 0; i < length; i++) {
+    document.querySelector("button[name=item" + i + "]").classList.replace("border-blue-500", "border-gray-200");
+  }
+  document.querySelector("button[name=item" + index + "]").classList.replace("border-gray-200", "border-blue-500");
+  document.querySelector("#Name").value = item.name
+  document.querySelector("#SellerName").value = item.sellerName
+  document.querySelector("#Company").value = item.company
+  document.querySelector("#PurchasePrice").value = item.purchasePrice
+  document.querySelector("#SalesPrice").value = item.salesPrice
+  document.querySelector("#Amount").value = item.amount
+  document.querySelector("#Unit").value = item.unit
+  document.querySelector("#Profit").innerText = item.salesPrice - item.purchasePrice
+  document.querySelector("#FinalProfit").innerText = (item.salesPrice - item.purchasePrice) * item.amount
+  document.querySelector("#day").value = item.date.split('-')[2]
+  document.querySelector("#month").value = item.date.split('-')[1]
+  document.querySelector("#year").value = item.date.split('-')[0]
+}
+//#endregion
+
+//#region basic methods
 const searchWord = () => {
   // Declare variables
   let filter, li, a, i, txtValue;
@@ -141,188 +130,125 @@ const searchWord = () => {
       li[i].style.display = "none";
     }
   }
-};
-
-let day = ref(dayjs().calendar('jalali').locale('fa').format('DD'));
-let month = ref(dayjs().calendar('jalali').locale('fa').format('MM'));
-let year = ref(dayjs().calendar('jalali').locale('fa').format('YYYY'));
-const setDate = () => {
-  date.value = year.value + "/" + month.value + "/" + day.value;
-};
-
-const duplicateItemData = (index) => {
-  document
-    .querySelector("input[name=profit]")
-    .classList.replace("border-red-500", "border-gray-50");
-  document
-    .querySelector("input[name=profit]")
-    .classList.replace("border-green-500", "border-gray-50");
-  document
-    .querySelector("input[name=profitxamount]")
-    .classList.replace("border-red-500", "border-gray-50");
-  document
-    .querySelector("input[name=profitxamount]")
-    .classList.replace("border-green-500", "border-gray-50");
-  name.value = null;
-  weight.value = null;
-  basePrice.value = null;
-  price.value = null;
-  profit.value = null;
-  amount.value = null;
-  profitxamount.value = null;
-  billId.value = null;
-  date.value = null;
-  day.value = null;
-  month.value = null;
-  year.value = null;
-  setDuplicatedData(index);
-  calculateInitDebt()
-  let length = dbData.value.length;
-  for (let i = 0; i < length; i++) {
-    document
-      .querySelector("button[name=item" + i + "]")
-      .classList.replace("border-blue-500", "border-gray-200");
-  }
-  document
-    .querySelector("button[name=item" + index + "]")
-    .classList.replace("border-gray-200", "border-blue-500");
-};
-
-const setDuplicatedData = (index) => {
-  name.value = dbData.value[index].name;
-  weight.value =
-    dbData.value[index].weight == "null" ? "" : dbData.value[index].weight;
-  basePrice.value =
-    dbData.value[index].basePrice == "null"
-      ? ""
-      : dbData.value[index].basePrice;
-  price.value =
-    dbData.value[index].price == "null" ? "" : dbData.value[index].price;
-  amount.value =
-    dbData.value[index].amount == "null" ? "" : dbData.value[index].amount;
-  billId.value =
-    dbData.value[index].billId == "null" ? "" : dbData.value[index].billId;
-  date.value =
-    dbData.value[index].date == "null" ? "" : dbData.value[index].date;
-  day.value =
-    dbData.value[index].date == "null"
-      ? ""
-      : dbData.value[index].date.split("/")[2];
-  month.value =
-    dbData.value[index].date == "null"
-      ? ""
-      : dbData.value[index].date.split("/")[1];
-  year.value =
-    dbData.value[index].date == "null"
-      ? ""
-      : dbData.value[index].date.split("/")[0];
-  if (price.value != null && basePrice.value != null) {
-    profit.value = parseInt(price.value) - parseInt(basePrice.value);
-  }
-  if (price.value != null && basePrice.value != null && amount.value != null) {
-    profitxamount.value = parseInt(profit.value) * parseInt(amount.value);
-  }
-};
-
-const profitxamount = ref(null);
-const calculator = () => {
-  if (price.value != null && basePrice.value != null) {
-    profit.value = parseInt(price.value) - parseInt(basePrice.value);
-    if (parseInt(profit.value) < 0) {
-      if (
-        document
-          .querySelector("input[name=profit]")
-          .classList.contains("border-gray-50")
-      ) {
-        document
-          .querySelector("input[name=profit]")
-          .classList.replace("border-gray-50", "border-red-500");
-      } else {
-        document
-          .querySelector("input[name=profit]")
-          .classList.replace("border-green-500", "border-red-500");
-      }
-    } else {
-      if (
-        document
-          .querySelector("input[name=profit]")
-          .classList.contains("border-gray-50")
-      ) {
-        document
-          .querySelector("input[name=profit]")
-          .classList.replace("border-gray-50", "border-green-500");
-      } else {
-        document
-          .querySelector("input[name=profit]")
-          .classList.replace("border-red-500", "border-green-500");
-      }
-    }
-  } else {
-    document
-      .querySelector("input[name=profit]")
-      .classList.replace("border-red-500", "border-gray-50");
-    document
-      .querySelector("input[name=profit]")
-      .classList.replace("border-green-500", "border-gray-50");
-  }
-  if (price.value != null && basePrice.value != null && amount.value != null) {
-    profitxamount.value = parseInt(profit.value) * parseInt(amount.value);
-    if (parseInt(profitxamount.value) < 0) {
-      if (
-        document
-          .querySelector("input[name=profitxamount]")
-          .classList.contains("border-gray-50")
-      ) {
-        document
-          .querySelector("input[name=profitxamount]")
-          .classList.replace("border-gray-50", "border-red-500");
-      } else {
-        document
-          .querySelector("input[name=profitxamount]")
-          .classList.replace("border-green-500", "border-red-500");
-      }
-    } else {
-      if (
-        document
-          .querySelector("input[name=profitxamount]")
-          .classList.contains("border-gray-50")
-      ) {
-        document
-          .querySelector("input[name=profitxamount]")
-          .classList.replace("border-gray-50", "border-green-500");
-      } else {
-        document
-          .querySelector("input[name=profitxamount]")
-          .classList.replace("border-red-500", "border-green-500");
-      }
-    }
-  } else {
-    document
-      .querySelector("input[name=profitxamount]")
-      .classList.replace("border-red-500", "border-gray-50");
-    document
-      .querySelector("input[name=profitxamount]")
-      .classList.replace("border-green-500", "border-gray-50");
-  }
-};
-
-const calculateInitDebt = () =>{
-  !amount.value ? amount.value = '1' : amount.value
-  let result = parseInt(basePrice.value) * parseInt(amount.value)
-  document.getElementById('debtBalance').innerText = formatData(result)
-  document.getElementById('debtPay').value = formatData(result)
-  document.getElementById('debtPay').disabled = false
 }
 
 const formatData = (data) => {
   if(data){
     return (data = data.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
   }
-};
+}
 
 const handleErrorClose = () =>{
   message.value = null;
 }
+//#endregion
+
+//#region set prop methods
+const setName = () =>{
+    item.name = document.querySelector("#Name").value
+}
+
+const setSellerName = () =>{
+    item.sellerName = document.querySelector("#SellerName").value
+}
+
+const setCompany = () =>{
+    item.company = document.querySelector("#Company").value
+}
+
+const setPurchasePrice = ()=>{
+    item.purchasePrice= document.querySelector("#PurchasePrice").value
+}
+
+const setSalesPrice = () =>{
+    item.salesPrice = document.querySelector("#SalesPrice").value
+}
+
+const setprofit = () =>{
+    document.querySelector("#Profit").innerText = calculateProfit().toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+}
+
+const setAmount = () =>{
+    item.amount = document.querySelector("#Amount").value
+}
+
+const setUnit = () =>{
+    item.unit = document.querySelector("#Unit").value
+}
+
+const setFinalProfit = () =>{
+    document.querySelector("#FinalProfit").innerText = calculateFinalProfit().toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+}
+
+const setDate = () =>{
+    item.date = setYear() + "-" + setMonth() + "-" + setDay();
+}
+
+const setPaid = () =>{
+  item.paid = document.querySelector("#Paid").value.replace(',','').replace(',','').replace(',','').replace(',','')
+}
+
+const setType = () =>{
+  item.type = document.querySelector("#Type").value
+}
+
+const setDescription = () =>{
+  item.description = document.querySelector("#Description").value
+}
+
+const setFullDebt = (value) =>{
+  document.getElementById("FullDebt").innerText = formatData(value)
+}
+
+const calculateAmountUnit = () =>{
+  setAmount()
+  setUnit()
+}
+
+const calculatePaid = (value)=>{
+  if(!value){ 
+    setPaid()
+  }
+  else {
+    document.querySelector("#Paid").value = formatData(value)
+    item.paid = value
+  }
+}
+
+const calculateFullDebtPaidTypeDate = () =>{
+  if(item.purchasePrice == null || item.purchasePrice == '')return
+  if(item.amount == null || item.amount == '')return
+  let result = item.purchasePrice * item.amount
+  setFullDebt(result)
+  calculatePaid(result)
+  setType()
+  setDate()
+}
+
+const calculateProfit = () =>{
+    if(item.purchasePrice == null)return
+    if(item.salesPrice == null)return
+    return item.salesPrice - item.purchasePrice
+}
+
+const calculateFinalProfit = () =>{
+    if(item.amount == null)return
+    return calculateProfit() * item.amount
+}
+
+const setDay = () =>{
+  return document.querySelector("#day").value
+}
+
+const setMonth = () =>{
+  return document.querySelector("#month").value
+}
+
+const setYear = () =>{
+  return document.querySelector("#year").value
+}
+
+//#endregion
 
 getData();
 </script>
@@ -351,14 +277,14 @@ getData();
         <!-- search -->
         <div class="lg:w-1/3 border rounded">
           <!-- search input -->
-          <div class="">
+          <div class="h-[90%]">
             <div class="flex gap-1 items-center rounded px-1">
               <input type="text" id="TableSearchBox" class="outline-none min-w-[300px] w-full" placeholder="جستجو در بین کالاهای موجود" @input="searchWord"/>
               <img :src="SearchIconSVG" alt="SearchIconSVG" />
             </div>
             <!-- search result -->
-            <div class="w-full grid overflow-y-scroll max-h-[80px]">
-              <button class="border border-gray-200 hover:bg-[#c9c9c9]" v-for="(item, index) in dbData" @click="duplicateItemData(index)"
+            <div class="flex flex-col overflow-y-scroll h-full w-full">
+              <button class="border border-gray-200 hover:bg-[#c9c9c9] max-h-[40px]" v-for="(item, index) in dbData" @click="duplicateItemData(index)"
                 :name="'item' + index" id="itemData" v-bind:key="index">
                 <div class="flex justify-between gap-1 p-[10px] text-[12px]">
                   <span>{{ item.name }}</span>
@@ -367,145 +293,101 @@ getData();
               </button>
             </div>
           </div>
-          <div class="flex justify-center gap-1 my-1 border rounded-md p-2" v-if="dbData.length == 0">
+          <div class="flex justify-center gap-1 my-1 border rounded-md p-2" v-if="!dbData">
             هیچ کالایی یافت نشد
           </div>
         </div>
         <!-- form -->
-        <Form1/>
-        <!-- <div class="lg:w-2/3 lg:border rounded lg:p-[20px]">
-          <div class="flex flex-col">
-            <p>نام<span class="text-red-500">*</span></p>
-            <input
-              type="text"
-              class="border rounded outline-none px-1"
-              placeholder="نام کالا"
-              v-model="name"
-            />
-          </div>
-          <div class="md:grid grid-flow-col grid-cols-5 gap-1">
-            <div class="flex flex-col col-span-2" @keyup="calculator">
-              <p>قیمت خرید<span class="text-red-500">*</span></p>
-              <input
-                type="text"
-                class="border rounded outline-none px-1 text-center"
-                placeholder="قیمت خرید فی کالا"
-                v-model="basePrice"
-                @input="calculateInitDebt"
-              />
-            </div>
-            <div class="flex flex-col col-span-2" @keyup="calculator">
-              <p>قیمت فروش<span class="text-red-500">*</span></p>
-              <input
-                type="text"
-                class="border rounded outline-none px-1 text-center"
-                placeholder="قیمت فروش فی کالا"
-                v-model="price"
-              />
-            </div>
-            <div class="flex flex-col">
-              <span>سود</span>
-              <input
-                type="text"
-                class="border border-gray-50 rounded-md outline-none px-1 text-center"
-                placeholder="سود فی کالا"
-                name="profit"
-                v-model="profit"
-                disabled
-              />
-            </div>
-          </div>
-          <div class="md:grid grid-flow-col grid-cols-5 gap-1">
-            <div class="flex flex-col col-span-2">
-              <span>وزن</span>
-              <input
-                type="text"
-                class="border rounded outline-none px-1 text-center"
-                placeholder="وزن فی کالا"
-                v-model="weight"
-              />
-            </div>
-            <div class="flex flex-col col-span-2" @keyup="calculator">
-              <p>تعداد<span class="text-red-500">*</span></p>
-              <input
-                type="text"
-                class="border rounded outline-none px-1 text-center"
-                placeholder="تعداد کالا"
-                v-model="amount"
-                @input="calculateInitDebt"
-              />
-            </div>
-            <div class="flex flex-col">
-              <span>سود در تعداد</span>
-              <input
-                type="text"
-                class="border border-gray-50 rounded-md outline-none px-1 text-center"
-                placeholder="سود محموله"
-                name="profitxamount"
-                v-model="profitxamount"
-                disabled
-              />
-            </div>
-          </div>
-          <div class="md:grid grid-flow-col grid-cols-5 gap-1">
-            <div class="flex flex-col col-span-4">
-              <span>فاکتور</span>
-              <input
-                type="text"
-                class="border rounded outline-none px-1"
-                placeholder="مشخصات فاکتور"
-                v-model="billId"
-              />
-            </div>
-            <div class="flex flex-col">
-              <span>تاریخ</span>
-              <div
-                class="border rounded px-1 text-center flex items-center"
-                @keyup="setDate"
-              >
-                <input
-                  type="text"
-                  class="w-full outline-none text-center"
-                  placeholder="روز"
-                  v-model="day"
-                  maxlength="2"
-                />/
-                <input
-                  type="text"
-                  class="w-full outline-none text-center"
-                  placeholder="ماه"
-                  v-model="month"
-                  maxlength="2"
-                />/
-                <input
-                  type="text"
-                  class="w-full outline-none text-center"
-                  placeholder="سال"
-                  v-model="year"
-                  maxlength="4"
-                />
+        <div class="lg:w-2/3 lg:border rounded lg:p-[20px] flex flex-col gap-1">
+          <!-- date -->
+          <div class="flex justify-end">
+            <div class="flex flex-col w-[150px]">
+              <div class="border rounded px-1 text-center flex items-center" @keyup="setDate">
+                  <input type="text" class="w-full outline-none text-center" :value="dayjs().calendar('jalali').locale('fa').format('DD')" id="day" placeholder="روز" maxlength="2"/>/
+                  <input type="text" class="w-full outline-none text-center" :value="dayjs().calendar('jalali').locale('fa').format('MM')" id="month" placeholder="ماه" maxlength="2"/>/
+                  <input type="text" class="w-full outline-none text-center" :value="dayjs().calendar('jalali').locale('fa').format('YYYY')" id="year" placeholder="سال" maxlength="4"/>
               </div>
             </div>
           </div>
-        </div> -->
+          <!-- Name SellerName -->
+          <div class="md:grid grid-flow-col grid-cols-2 gap-1">
+            <div class="flex flex-col col-span-1">
+              <p>نام<span class="text-red-500">(اجباری)</span></p>
+              <input type="text" class="border rounded outline-none px-1 text-center" placeholder="نام کالا" id="Name" @input="setName"/>
+            </div>
+            <div class="flex flex-col col-span-1">
+              <p>فروشنده<span class="text-red-500">(اجباری)</span></p>
+              <input type="text" class="border rounded outline-none px-1 text-center" placeholder="نام فروشنده" id="SellerName" @input="setSellerName"/>
+            </div>
+          </div>
+          <!-- Compnay PurchasePrice -->
+          <div class="md:grid grid-flow-col grid-cols-2 gap-1">
+            <div class="flex flex-col col-span-1">
+              <p>شرکت<span class="text-red-500">(اجباری)</span></p>
+              <input type="text" class="border rounded outline-none px-1 text-center" placeholder="نام شرکت کالا" id="Company" @input="setCompany"/>
+            </div>
+            <div class="flex flex-col col-span-2" @keyup="setprofit(),calculateFinalProfit(),calculateFullDebtPaidTypeDate()">
+              <p>قیمت خرید<span class="text-red-500">(اجباری)(ریال)</span></p>
+              <input type="text" class="border rounded outline-none px-1 text-center" placeholder="قیمت خرید فی کالا" id="PurchasePrice" @input="setPurchasePrice" dir="ltr"/>
+            </div>
+          </div>
+          <!-- SalesPrice Profit -->
+          <div class="md:grid grid-flow-col grid-cols-2 gap-1">
+            <div class="flex flex-col col-span-1" @keyup="setprofit(),calculateFinalProfit()">
+              <p>قیمت فروش<span class="text-red-500">(اجباری)(ریال)</span></p>
+              <input type="text" class="border rounded outline-none px-1 text-center" placeholder="قیمت فروش فی کالا" id="SalesPrice" @input="setSalesPrice" dir="ltr"/>
+            </div>
+            <div class="flex flex-col col-span-1">
+              <span>سود</span>
+              <div class="border p-[5px] bg-gray-300 rounded-md px-1 text-center" id="Profit">سود فی کالا (ریال)</div>
+            </div>
+          </div>
+          <!-- Amount Unit FinalProfit -->
+          <div class="md:grid grid-flow-col grid-cols-2 gap-1">
+            <div class="flex flex-col col-span-1" @keyup="calculateFinalProfit">
+              <p>مقدار<span class="text-red-500">(اجباری)</span></p>
+              <div class="flex justify-between border rounded">
+                  <input type="text" class="outline-none px-1 w-full border-l bg-transparent" dir="ltr" placeholder="0" id="Amount" @input="setAmount(),calculateFullDebtPaidTypeDate(),calculateAmountUnit(),setFinalProfit()"/>
+                  <select class="cursor-pointer outline-none bg-transparent" id="Unit" @input="setUnit">
+                      <option value="عدد">عدد</option>
+                      <option value="کیلوگرم">کیلوگرم</option>
+                      <option value="گرم">گرم</option>
+                  </select>
+              </div>
+            </div>
+            <div class="flex flex-col col-span-1">
+              <span>سود x مقدار</span>
+              <div class="border p-[5px] bg-gray-300 rounded-md px-1 text-center" id="FinalProfit">سود محموله (ریال)</div>
+            </div>
+          </div>
+        </div>
       </div>
       <!-- footer -->
-      <div class="w-full flex items-center mt-[10px] text-center">
-        <div class="grid grid-flow-col grid-cols-2 items-center gap-1 w-full mb-1">
-          <span>بدهی:</span>
-          <span id="debtBalance" class="text-white bg-red-500 p-[5px]">0</span>
-          <span>تومان</span>
+      <div class="w-full flex flex-col lg:flex-row gap-1 lg:gap-0 items-center mt-[10px] text-center">
+        <div class="grid grid-flow-col grid-cols-3 items-center gap-1 w-full lg:mb-1">
+          <span>هزینه کل کالا:</span>
+          <span id="FullDebt" class="text-white bg-red-500 p-[5px]">0</span>
+          <span>ریال</span>
         </div>
-        <div class="grid grid-flow-col grid-cols-2 items-center gap-1 w-full">
+        <div class="grid grid-flow-col grid-cols-3 lg:flex items-center gap-1 w-full">
           <span>پرداخت:</span>
-          <input type="text" value="0" id="debtPay" class="text-center border border-blue-500" disabled>
-          <span>تومان</span>
+          <div class="flex flex-col lg:flex-row border border-blue-500 w-full">
+            <input type="text" value="0" id="Paid" class="outline-none border-blue-500 border-b lg:border-l lg:border-b-0" dir="ltr" @input="setPaid">
+            <select id="Type" class="outline-none" @input="setType">
+              <option value="چک">چک</option>
+              <option value="نقدی">نقدی</option>
+              <option value="کارتخوان">کارتخوان</option>
+              <option value="کارت به کارت">کارت به کارت</option>
+            </select>
+          </div>
+          <span>ریال</span>
         </div>
-        <div class="w-full flex justify-center lg:justify-end">
-          <button
-            @click="postData"
-            class="border bg-blue-500 hover:bg-blue-600 text-white p-[5px] w-1/2 rounded"
-          >
+        <div class="grid grid-flow-col grid-cols-3 lg:grid-cols-2 items-center gap-1 w-full">
+          <span>توضیحات:</span>
+          <input type="text" id="Description" class="text-center border border-blue-500">
+        </div>
+        <div class="w-full flex lg:justify-end">
+          <button @click="postData" class="border bg-blue-500 hover:bg-blue-600 text-white p-[5px] w-full lg:w-2/3 rounded">
             ذخیره
           </button>
         </div>

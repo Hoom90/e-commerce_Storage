@@ -222,10 +222,10 @@ getData()
             {{message}}
             <i>x</i>
         </button>
-        <div class="max-w-[800px] mx-auto my-[20px] border rounded-md p-[10px] ">
+        <div class="max-w-[400px] mx-auto my-[20px] border rounded-md p-[10px] ">
 
-            <div class="flex justify-center">
-                <div class="flex items-center">
+            <div class="flex justify-center relative">
+                <div class="absolute top-5 right-5 flex items-center">
                     <RouterLink to="/warehouse"
                         class="flex gap-1 items-center hover:bg-blue-500 w-[100px] hover:text-white border border-blue-500 rounded-md px-2 p-1">
                         <img :src="ArrowIconSVG" alt="ArrowIconSVG">
@@ -238,66 +238,74 @@ getData()
                 </div>
             </div>
 
-            <div class="flex flex-col mt-3">
-                <p>
-                    <span>نام</span>
-                </p>
-                <div class="w-full">
-                    <input type="text" class="border rounded outline-none px-1 w-full" placeholder="نام کالا" id="name" :value="dbData.name">
+            <!-- form -->
+            <div class="flex flex-col gap-1">
+                <!-- name date -->
+                <div class="md:grid grid-flow-col grid-cols-2 gap-1">
+                    <div class="flex flex-col col-span-1">
+                        <div>نام</div>
+                        <input type="text" class="border rounded px-1 w-full" placeholder="نام کالا" id="name" :value="dbData.name" @input="setName">
+                    </div>
+                    <div class="flex flex-col col-span-1">
+                        <div>تاریخ ثبت</div>
+                        <div class="flex items-center col-span-1 border rounded bg-slate-100">
+                            <input class="w-full text-center" :value="dbData.date.split('-')[2]" disabled>/
+                            <input class="w-full text-center" :value="dbData.date.split('-')[1]" disabled>/
+                            <input class="w-full text-center" :value="dbData.date.split('-')[0]" disabled>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="md:grid grid-flow-col grid-cols-5 gap-1">
-                <div class="flex flex-col col-span-2" @keyup="calculator">
-                    <span>قیمت خرید</span>
-                    <input type="text" class="border rounded outline-none px-1 text-center" placeholder="قیمت خرید فی کالا" id="basePrice" :value="dbData.basePrice">
+                <!-- seller company -->
+                <div class="md:grid grid-flow-col grid-cols-2 gap-1">
+                    <div class="flex flex-col col-span-1">
+                        <span>فروشنده</span>
+                        <input type="text" class="rounded text-center" :value="dbData.sellerName" disabled>
+                    </div>
+                    <div class="flex flex-col col-span-1">
+                        <span>شرکت</span>
+                        <input type="text" class="rounded text-center" :value="dbData.company" disabled>
+                    </div>
                 </div>
-                <div class="flex flex-col col-span-2" @keyup="calculator">
-                    <span>قیمت فروش</span>
-                    <input type="text" class="border rounded outline-none px-1 text-center" placeholder="قیمت فروش فی کالا" id="price" :value="dbData.price">
+                <!-- purchase sale price -->
+                <div class="md:grid grid-flow-col grid-cols-2 gap-1">
+                    <div class="flex flex-col col-span-1">
+                        <span>قیمت خرید</span>
+                        <input type="text" class="rounded text-center" :value="dbData.purchasePrice" disabled>
+                    </div>
+                    <div class="flex flex-col col-span-1" @keyup="calculator">
+                        <span>قیمت فروش</span>
+                        <input type="text" class="border rounded text-center" placeholder="قیمت فروش فی کالا" id="salesPrice" :value="dbData.salesPrice" @input="setSalesPrice">
+                    </div>
                 </div>
-                <div class="flex flex-col">
-                    <span>سود</span>
-                    <input type="text" class="border border-gray-50 rounded-md outline-none px-1 text-center"
-                        placeholder="سود فی کالا" name="profit" id="profit" disabled :value="dbData.profit">
+                <div class="md:grid grid-flow-col grid-cols-2 gap-1">
+                    <div class="flex flex-col col-span-1">
+                        <span>تعداد</span>
+                        <input type="text" class="rounded text-center" disabled :value="dbData.amount">
+                    </div>
+                    <div class="flex flex-col col-span-1">
+                        <span>واحد</span>
+                        <input type="text" class="rounded text-center" disabled :value="dbData.unit">
+                    </div>
                 </div>
-            </div>
-            <div class="md:grid grid-flow-col grid-cols-5 gap-1">
-                <div class="flex flex-col col-span-2">
-                    <span>وزن</span>
-                    <input type="text" class="border rounded outline-none px-1 text-center" placeholder="وزن فی کالا" id="weight" :value="dbData.weight">
-                </div>
-                <div class="flex flex-col col-span-2" @keyup="calculator">
-                    <span>تعداد</span>
-                    <input type="text" class="border rounded outline-none px-1 text-center" placeholder="تعداد کالا" id="amount" :value="dbData.amount">
-                </div>
-                <div class="flex flex-col">
-                    <span>سود در تعداد</span>
-                    <input type="text" class="border border-gray-50 rounded-md outline-none px-1 text-center"
-                        placeholder="سود محموله" name="profitxamount" id="profitxamount" disabled :value="parseInt(dbData.amount) * parseInt(dbData.profit)">
-                </div>
-            </div>
-            <div class="md:grid grid-flow-col grid-cols-5 gap-1">
-                <div class="flex flex-col col-span-4">
-                    <span>فاکتور</span>
-                    <input type="text" class="border rounded outline-none px-1" id="billId" placeholder="مشخصات فاکتور" :value="dbData.billId">
-                </div>
-                <div class="flex flex-col">
-                    <span>تاریخ</span>
-                    <div class="border rounded px-1 text-center flex items-center" @keyup="setDate">
-                        <input type="text" class="w-full outline-none text-center" placeholder="روز" maxlength="2" id="day" :value="dbData.date.split('/')[2]">/
-                        <input type="text" class="w-full outline-none text-center" placeholder="ماه" maxlength="2" id="month" :value="dbData.date.split('/')[1]">/
-                        <input type="text" class="w-full outline-none text-center" placeholder="سال" maxlength="4" id="year" :value="dbData.date.split('/')[0]">
+                <div class="md:grid grid-flow-col grid-cols-2 gap-1">
+                    <div class="flex flex-col col-span-1">
+                        <span>سود</span>
+                        <input type="text" class="rounded text-center" disabled :value="dbData.profit">
+                    </div>
+                    <div class="flex flex-col col-span-1">
+                        <span>سود کل</span>
+                        <input type="text" class="rounded text-center" disabled :value="dbData.profit * dbData.amount">
                     </div>
                 </div>
             </div>
 
-
+            <!-- buttons -->
             <div class="w-full flex flex-col md:flex-row lg:justify-between gap-1 items-center mt-[10px]">
                 <button @click="deleteData"
-                class="border border-red-500 hover:bg-red-600 text-red-500 order-2 md:order-1 hover:text-white p-1 w-full lg:w-[100px] rounded">حذف</button>
-            <button @click="patchData"
-                class="border bg-blue-500 hover:bg-blue-600 order-1 md:order-2 text-white p-1 w-full lg:w-[200px] rounded">ذخیره</button>
-        </div>
+                class="border border-red-500 hover:bg-red-600 text-red-500 order-2 md:order-1 hover:text-white p-1 w-1/2 rounded">حذف</button>
+                <button @click="patchData"
+                    class="border bg-blue-500 hover:bg-blue-600 order-1 md:order-2 text-white p-1 w-1/2 rounded">ذخیره</button>
+            </div>
     </div>
 </div>
 <Loading v-if="loading"></Loading>
