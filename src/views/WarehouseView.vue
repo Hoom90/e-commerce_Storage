@@ -17,11 +17,12 @@ const stockAmount = ref(0)
 const liquidity = ref(0)
 
 onMounted(()=>{
-    getData()
+    init()
 })
 
 const init = async() =>{
     loading.value = true
+    dbData.value = null
     stockAmount.value = 0
     liquidity.value = 0
     await getData()
