@@ -180,6 +180,18 @@ const setFinalProfit = () =>{
     document.querySelector("#FinalProfit").innerText = calculateFinalProfit().toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 }
 
+const setDay = () =>{
+  return document.querySelector("#day").value
+}
+
+const setMonth = () =>{
+  return document.querySelector("#month").value
+}
+
+const setYear = () =>{
+  return document.querySelector("#year").value
+}
+
 const setDate = () =>{
     item.date = setYear() + "-" + setMonth() + "-" + setDay();
 }
@@ -234,18 +246,6 @@ const calculateProfit = () =>{
 const calculateFinalProfit = () =>{
     if(item.amount == null)return
     return calculateProfit() * item.amount
-}
-
-const setDay = () =>{
-  return document.querySelector("#day").value
-}
-
-const setMonth = () =>{
-  return document.querySelector("#month").value
-}
-
-const setYear = () =>{
-  return document.querySelector("#year").value
 }
 
 //#endregion
@@ -384,7 +384,7 @@ getData();
         </div>
         <div class="grid grid-flow-col grid-cols-3 lg:grid-cols-2 items-center gap-1 w-full">
           <span>توضیحات:</span>
-          <input type="text" id="Description" class="text-center border border-blue-500">
+          <input type="text" id="Description" class="text-center border border-blue-500" @input="setDescription">
         </div>
         <div class="w-full flex lg:justify-end">
           <button @click="postData" class="border bg-blue-500 hover:bg-blue-600 text-white p-[5px] w-full lg:w-2/3 rounded">

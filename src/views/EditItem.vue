@@ -25,6 +25,7 @@ let item = {
     update:'',
 }
 
+let tempItem
 const message = ref(null)
 const loading = ref(false)
 const openError = ref(false)
@@ -47,6 +48,7 @@ const getData = async () => {
             date:res.data.date,
             update:'',
         }
+        tempItem = item
     })
     .catch((error) => {
         console.log(error);
@@ -58,9 +60,12 @@ const getData = async () => {
 
 const patchData  = async() =>{
     loading.value = true
+    if(tempItem == item){
+        loading.value = false
+        router.push('/warehouse')
+    }
     item.update = dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
     const body = item
-    // console.log(body);
     await axios.patch(serverURL + "/api/itemTransaction/" + route.currentRoute.value.params.id, body, {
         headers: {
             'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
