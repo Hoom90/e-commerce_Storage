@@ -84,7 +84,6 @@ const patchData  = async() =>{
 }
 
 const deleteData  = async() =>{
-    loading.value = true
     let description = document.querySelector('#description').value
     let id = route.currentRoute.value.params.id
     const body = {
@@ -94,6 +93,7 @@ const deleteData  = async() =>{
     const headers= {
         'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
     }
+    loading.value = true
     await axios.delete(serverURL + "/api/itemTransaction/" + id,{headers,data:body})
     .then(
         router.push('/warehouse')

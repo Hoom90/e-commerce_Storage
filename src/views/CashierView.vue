@@ -2,7 +2,7 @@
 import store from '../store';
 import router from '../config';
 
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import Loading from '../components/loading.vue'
 import serverURL from '../config/serverAddress'
 import RemoveIconSVG from '../assets/removeIcon.svg'
@@ -11,105 +11,92 @@ import dayjs from 'dayjs'
 import jalaliday from 'jalaliday'
 dayjs.extend(jalaliday)
 
-const balanceData = ref({
-  'income':null,
-  'outcome':null,
-  'balance':null
-})
-const transactionData = ref(null)
+let dbData = []
+
+const balanceData = ref({income:'',debt:'',current:''})
+const historyData = ref(null)
 const loading = ref(false)
 const message = ref(null)
 
 let id = ref(null)
-let personName = ref(null)
-let cost = ref(null)
-let description = ref(null)
-let card = ref(null)
-let cash = ref(null)
+let receiverNameIn = ref(null)
+let receiverNameOut = ref(null)
+let paidIn = ref(null)
+let paidOut = ref(null)
+let descriptionIn = ref(null)
+let descriptionOut = ref(null)
+let typeIn = ref(null)
+let typeOut = ref(null)
+
+onMounted(()=>{
+    typeIn.value = 'کارتخوان1'
+    typeOut.value = 'کارت به کارت'
+})
+
 const getData = async() => {
-    balanceData.value = {
-        'income':null,
-        'outcome':null,
-        'balance':null
-    }
-    transactionData.value = null
+    balanceData.value = {income:'',debt:'',current:''}
+    historyData.value = null
     loading.value = true
     await getBalance()
     await getBalanceLogs()
+    calculateTodayBalance()
+    formatHistoryData()
     loading.value = false
 }
 
-// Get Last Balance
+// Get Today Transactions
 const getBalance = async () =>{
     await axios.get(serverURL + "/api/balanceTransaction/"+ dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
       (res)=>{
-        balanceData.value = res.data
-        calculateBalance()
+        dbData = res.data
       }
     )
     .catch(function (error) { console.log(error),loading.value = false,message.value=error})
 }
 
-const calculateBalance = () =>{
-    let income = 0 , outcome = 0 ,balance=0
-    balanceData.value.forEach(item => {
-        income += parseInt( item.income)
-        outcome += parseInt( item.outcome)
-    });
-    if(parseInt(outcome) < 0){
-        balance = parseInt(income) + parseInt(outcome)
-    }
-    else{
-        balance = parseInt(income) - parseInt(outcome)
-    }
-    balanceData.value = {
-        income,
-        outcome,
-        balance,
-        'date' : dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
-    }
-}
-
-// Get All Logs
+// Get All Histories
 const getBalanceLogs = async () =>{
     await axios.get(serverURL + '/api/balanceHistories/' + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
         (res)=>{
-            if(res.data.length != 0){
-                transactionData.value = res.data
-            }
+            historyData.value = res.data
       }
     )
     .catch((error) =>{ console.log(error),loading.value = false,message.value = error})
 }
 
 //POST
-const postOutcome = async() => {
-    message.value = null
-    loading.value = true;
-    let outcome = '-' + cost.value
-    let balance = balanceData.value.balance ? (parseInt(balanceData.value.balance) - parseInt(outcome)).toString() : (-parseInt(outcome)).toString()
-    let body = {
-        "income": '0',
-        "outcome": outcome,
-        "balance": balance,
-        "personName": personName.value,
-        "cost": cost.value,
-        "description": description.value,
-        "date" : dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
+const postExpense = async() => {
+    if(receiverNameOut.value == null){
+        message.value ="مالک حساب نباید خالی باشد"
+        return
+    }
+    if(paidOut.value == null){
+        message.value ="مبلغ نباید خالی باشد"
+        return
+    }
+    if(descriptionOut.value == null){
+        message.value = "توضیحات نباید خالی باشد"
+        return
+    }
+    const body = {
+        receiverName : receiverNameOut.value,
+        paid: paidOut.value,
+        description: descriptionOut.value,
+        type: typeOut.value,
+        date: dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD'),
     };
-    await axios.post(serverURL + "/api/balanceTransaction/",body,{
+    loading.value = true;
+    await axios.post(serverURL + "/api/balanceTransaction/expense",body,{
         headers: {
         'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
         }
     })
-    .then(function (response) {
-        personName.value = null
-        cost.value = null
-        description.value = null
-        getData();
-    })
+    .then(
+        receiverNameOut.value = null,
+        paidOut.value = null,
+        descriptionOut.value = null,
+        getData()
+    )
     .catch((error) => {
         console.log(error);
         message.value = error
@@ -120,37 +107,38 @@ const postOutcome = async() => {
 }
 
 // POST
-const postIncome = async() =>{
-    loading.value = true;
-    if(card.value == null){
-        card.value = 0
+const postEarning = async() =>{
+    if(receiverNameIn.value == null){
+        message.value ="مالک حساب را وارد کنید"
+        return
     }
-    else if(cash.value == null){
-        cash.value = 0
+    if(paidIn.value == null){
+        message.value ="مبلغ را وارد کنید"
+        return
     }
-    let income = (parseInt(card.value) + parseInt(cash.value)).toString()
-    let balance = balanceData.value.balance ? (parseInt(balanceData.value.balance) + parseInt(income)).toString() : (parseInt(income)).toString()
+    if(descriptionIn.value == null){
+        descriptionIn.value ="ورودی خارج از سیستم"
+    }
     const body = {
-        "income": income,
-        "outcome": '0',
-        "balance": balance,
-        "card": card.value,
-        "cash": cash.value,
-        'description':'واریز به صندوق',
-        "date" : dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD'),
+        receiverName : receiverNameIn.value,
+        paid: paidIn.value,
+        description: descriptionIn.value,
+        type: typeIn.value,
+        date: dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD'),
     };
-    await axios.post(serverURL + "/api/balanceTransaction/",body,{
+    // console.log(body);
+    loading.value = true;
+    await axios.post(serverURL + "/api/balanceTransaction/earning",body,{
         headers: {
         'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
         }
     })
-    .then(function (response) {
-        cash.value = null
-        card.value = null
-        getData();
-    })
+    .then(
+        paidIn.value = null,
+        receiverNameIn.value = null,
+        descriptionIn.value = null,
+        getData()
+    )
     .catch((error) => {
         console.log(error);
         message.value = error
@@ -162,143 +150,171 @@ const postIncome = async() =>{
 
 // DELETE
 const deleteData = async (index) =>{
-    loading.value = true
-    let id = transactionData.value[index]._id
-    let income ='0',outcome ='0',balance ='0'
-    let cost  = transactionData.value[index].cost ? transactionData.value[index].cost : '0'
-    let card = transactionData.value[index].card ? transactionData.value[index].card : '0'
-    let cash = transactionData.value[index].cash ? transactionData.value[index].cash : '0'
-    if(cost === '0'){
-        income = (- parseInt(card) + parseInt(cash)).toString()
-        outcome = '0'
-    }
-    else{
-        income = '0'
-        outcome = (- parseInt(cost)).toString()
-    }
+    let id = historyData.value[index]._id
+    let fk = historyData.value[index].fk
     const body = {
-        income,
-        outcome,
-        balance,
-        "logicalDelete": "true",
-        "date":dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD'),
+        id,
+        fk,
     };
-    await fetch(serverURL + "/api/balanceTransaction/" + id,{
-        method: "DELETE",
-        body: JSON.stringify(body),
-        headers: {
-            'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
-            'Content-Type': 'application/json'
+    const headers= {
+        'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
+    };
+    loading.value = true
+    await axios.delete(serverURL + "/api/balanceTransaction/" + id,{headers,data:body})
+    .then(
+        document.querySelector('div[name=data'+index+']').classList.replace('grid','hidden'),
+        getData()
+    )
+    .catch((error) => {
+        console.log(error);
+        loading.value = false
+        message.value = error
+    }).finally(
+        loading.value = false,
+    )
+}
+
+
+const calculateTodayBalance = () =>{
+    let current = 0 , income = 0 , debt = 0;
+    dbData.forEach(item => {
+        if(parseInt(item.action) > 0){
+            income += parseInt(item.action)
         }
+        if(parseInt(item.action) < 0){
+            debt += parseInt(item.action)
+        }
+        current += parseInt(item.action)
+    });
+    income = income.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+    debt = (debt*-1).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+    current = current.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+    balanceData.value = {
+        income,
+        debt,
+        current,
+    }
+}
+
+const formatHistoryData = () =>{
+    let temp = []
+    historyData.value.forEach(item =>{
+        item.amount = item.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        temp.push(item)
     })
-    .then(res => {
-        if(!res.ok){
-            console.log(res.statusText);
-            loading.value = false
-            message.value = res.statusText
-        }
-        else{
-            loading.value = false,
-            document.querySelector('div[name=data'+index+']').classList.replace('grid','hidden'),
-            getData()
-        }
-    })
+    historyData.value = temp
+}
+
+const IsDeleteActive = (index) => {
+    if(historyData.value[index].description == '') return false
+    else return true
 }
 
 getData()
-
 </script>
 <template>
     <main class="flex flex-col pt-[25px] justify-center items-center relative">
         <div class="text-[24px] w-full px-5 flex items-center gap-5 justify-between -z-10">
             <span>صندوق</span>
         </div>
-        <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
+        <button class="absolute w-full flex justify-between top-0 right-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
             {{message}}
             <i>x</i>
         </button>
-        <!-- <div v-if="!isTodayClose" id="notebook"> -->
-        <div id="notebook">
-            
 
-            <div class="flex flex-col md:flex-row justify-center items-center md:justify-between p-[20px]">
-                <span>درآمد امروز: {{ balanceData.income ? balanceData.income.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0' }} تومان</span>
-                <span>بدهی امروز: <span dir="ltr">{{ balanceData.outcome ? balanceData.outcome.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0' }}</span> تومان</span>
-                <p>وضعیت دخل امروز: <span dir="ltr">{{ balanceData.balance ? balanceData.balance.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0' }}</span> تومان</p>
-            </div>
-
-            <ul class="text-[12px] px-[20px]">
-                <li class="text-red-500">* حذف تراکنش <span class="underline underline-offset-8">خرید و فروش کالا</span> باعث بهم ریختگی آمار انبار و صندوق میشود!</li>
-            </ul>
-
-            <!-- table -->
-            <div class="w-[90%] md:m-5 md:mx-10 md:h-[50vh] lg:h-[55vh] mx-auto mb-40">
-                <div class="grid grid-flow-col grid-cols-12 border-b bg-white">
-                    <div class="py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-4">نام کاربر</div>
-                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-3">هزینه ها</div>
-                    <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-4">توضیحات</div>
-                    <div class="border-r col-span-1"></div>
+        <div class="w-[90%]">
+            <div class="border rounded p-[20px]">
+                <!-- header -->
+                <div class="flex flex-col md:flex-row justify-center items-center md:justify-between">
+                    <span>درآمد امروز: {{ balanceData.income }} (ریال)</span>
+                    <span>بدهی امروز: <span dir="ltr">{{ balanceData.debt }}</span> (ریال)</span>
+                    <p>وضعیت دخل امروز: <span dir="ltr">{{ balanceData.current }}</span> (ریال)</p>
                 </div>
-                <div class="flex flex-col">
-                    <div v-if="transactionData != null" class="max-h-[500px] overflow-auto">
-                      <div v-for="(data,index) in transactionData" class="grid grid-flow-col grid-cols-12 border-b odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" :name="'data'+index" v-bind:key="index">
-                          <div class="flex justify-center items-center text-[12px] truncate col-span-4 p-2 px-3">{{ data.personName ? data.personName : "شما" }}</div>
-                          <div class="border-r flex justify-center items-center text-[12px] truncate col-span-3 p-2 px-3" dir='ltr'>{{ data.cost ? data.cost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : (parseInt(data.cash) + parseInt(data.card)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")  }} تومان</div>
-                          <div class="border-r flex justify-center items-center text-[12px] truncate col-span-4 p-2 px-3">{{ data.description }}</div>
-                          <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">
-                              <button class="bg-red-500 p-1 rounded-md text-white hover:bg-red-600 shadow-lg hover:shadow-none" @click="deleteData(index)">
-                                <img :src="RemoveIconSVG" alt="RemoveIconSVG">
-                              </button>
-                          </div>
-                      </div>
+                <!-- table -->
+                <div class="w-full h-[350px] mx-auto">
+                    <div class="grid grid-flow-col grid-cols-12 border-b bg-white">
+                        <div class="py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-3">نام کاربر</div>
+                        <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-3">هزینه ها</div>
+                        <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-2">نوع پرداخت</div>
+                        <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-3">توضیحات</div>
+                        <div class="border-r col-span-1"></div>
                     </div>
-                    <div class="grid grid-flow-col grid-cols-12 border-b">
-                        <div class="flex justify-center items-center text-[12px] truncate col-span-4">
-                            <input type="text" class="w-full p-1 px-2 outline-none placeholder:text-center text-center" placeholder="نام" v-model="personName"></div>
-                        <div class="border-r flex justify-center items-center text-[12px] truncate col-span-3">
-                            <input type="text" class="w-full p-1 px-2 outline-none placeholder:text-center text-center" placeholder="هزینه" v-model="cost"></div>
-                        <div class="border-r flex justify-center items-center text-[12px] truncate col-span-4">
-                            <input type="text" class="w-full p-1 px-2 outline-none placeholder:text-center text-center" placeholder="توضیحات" v-model="description"></div>
-                        <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">
-                            <button class="bg-blue-500 p-2 px-3 rounded-md text-white hover:bg-blue-600 shadow-lg hover:shadow-none" @click="postOutcome">ذخیره</button></div>
+                    <div class="flex flex-col">
+                        <!-- items -->
+                        <div v-if="historyData != null" class="overflow-auto">
+                        <div v-for="(data,index) in historyData" class="grid grid-flow-col grid-cols-12 border-b odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" :name="'data'+index" v-bind:key="index">
+                            <div class="flex justify-center items-center text-[12px] truncate col-span-3 p-2 px-3">{{ data.receiverName }}</div>
+                            <div class="border-r flex justify-center items-center text-[12px] truncate col-span-3 p-2 px-3" dir='ltr'>(ریال) {{ data.amount }}</div>
+                            <div class="border-r flex justify-center items-center text-[12px] truncate col-span-2 p-2 px-3"> {{ data.type }}</div>
+                            <div class="border-r flex justify-center items-center text-[12px] truncate col-span-3 p-2 px-3">{{ data.description ? data.description : '-'}}</div>
+                            <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">
+                                <button class="bg-red-500 p-1 rounded-md text-white hover:bg-red-600 shadow-lg hover:shadow-none" v-if="IsDeleteActive(index)" @click="deleteData(index)">
+                                    <img :src="RemoveIconSVG" alt="RemoveIconSVG">
+                                </button>
+                            </div>
+                        </div>
+                        </div>
+                        <!-- form -->
+                        <div class="grid grid-flow-col grid-cols-12 border-b">
+                            <div class="flex justify-center items-center text-[12px] truncate col-span-3">
+                                <input type="text" class="w-full p-1 px-2 outline-none placeholder:text-center text-center" placeholder="نام" v-model="receiverNameOut"></div>
+                            <div class="border-r flex justify-center items-center text-[12px] truncate col-span-3">
+                                <input type="text" class="w-full p-1 px-2 outline-none placeholder:text-center text-center" placeholder="هزینه" v-model="paidOut"></div>
+                            <div class="border-r flex justify-center items-center text-[12px] truncate col-span-2">
+                                <select v-model="typeOut" class="w-full p-1 px-2 outline-none placeholder:text-center text-center">
+                                    <option value="کارت به کارت">کارت به کارت</option>
+                                    <option value="چک1">چک1</option>
+                                    <option value="چک2">چک2</option>
+                                    <option value="نقدی">نقدی</option>
+                                </select>
+                            </div>
+                            <div class="border-r flex justify-center items-center text-[12px] truncate col-span-3">
+                                <input type="text" class="w-full p-1 px-2 outline-none placeholder:text-center text-center" placeholder="توضیحات" v-model="descriptionOut"></div>
+                            <div class="border-r py-2 px-3 flex justify-center items-center text-[12px] truncate col-span-1">
+                                <button class="bg-blue-500 p-2 px-3 rounded-md text-white hover:bg-blue-600 shadow-lg hover:shadow-none" @click="postExpense">ذخیره</button></div>
+                        </div>
                     </div>
-                    <div class="grid gap-1 mt-1 text-red-500 text-[12px]" v-if="message">
-                        <span>پر کردن نام الزامیست</span>
-                        <span>پر کردن هزینه الزامیست</span>
-                        <span>پر کردن توضیحات الزامیست</span>
+                </div>
+                <!-- footer -->
+                <div class="bg-white w-full fixed bottom-0 right-0 border-t p-[20px] grid grid-cols-1 justify-center items-center gap-4 lg:absolute lg:-bottom-20 lg:grid-cols-12">
+                    <div class="grid grid-flow-col grid-cols-4 items-center gap-1 lg:col-span-3">
+                        <span>حساب:</span>
+                        <input type="text" placeholder="نام مالک حساب" class="outline-none border rounded col-span-3" v-model="receiverNameIn">
                     </div>
-
-                </div>
-            </div>
-            <!-- footer -->
-            <div class="hidden bg-white w-full md:grid grid-cols-1 md:grid-cols-3 justify-center items-center gap-4 px-[20px]">
-                <div class="flex items-center justify-between gap-1 w-full col-span-1">
-                    <span>کارتخوان:</span>
-                    <input type="text" maxlength="15" class="border rounded-md h-[30px] w-4/5 px-2 outline-none" placeholder="0" dir="ltr" v-model="card"> تومان
-                </div>
-                <div class="flex items-center justify-between gap-1 w-full col-span-1">
-                    <span>نقدی:</span>
-                    <input type="text" maxlength="15" class="border rounded-md h-[30px] w-4/5 px-2 outline-none" placeholder="0" dir="ltr" v-model="cash"> تومان
-                </div>
-                <div class="col-span-1 w-full">
-                    <button class="bg-blue-500 text-white p-1 px-3 rounded-md w-full lg:w-fit hover:bg-blue-600 shadow-md hover:shadow-none" @click="postIncome">لحاظ تغییرات</button>
-                </div>
-            </div>
-            <!-- footer -->
-            <div class="bg-white w-full md:hidden fixed bottom-0 py-[20px] grid grid-cols-1 md:grid-cols-4 justify-center items-center gap-4 px-[20px]">
-                <div class="flex items-center justify-between gap-1 w-full col-span-1">
-                    <span>کارتخوان:</span>
-                    <input type="text" maxlength="15" class="border rounded-md h-[30px] w-4/5 px-2 outline-none" placeholder="0" dir="ltr" v-model="card"> تومان
-                </div>
-                <div class="flex items-center justify-between gap-1 w-full col-span-1">
-                    <span>نقدی:</span>
-                    <input type="text" maxlength="15" class="border rounded-md h-[30px] w-4/5 px-2 outline-none" placeholder="0" dir="ltr" v-model="cash"> تومان
-                </div>
-                <div class="col-span-1 w-full">
-                    <button class="bg-blue-500 text-white p-1 px-3 rounded-md w-full lg:w-fit hover:bg-blue-600 shadow-md hover:shadow-none" @click="postIncome">لحاظ تغییرات</button>
+                    <div class="grid grid-flow-col grid-cols-4 items-center gap-1 lg:col-span-4">
+                        <span>مقدار:</span>
+                        <div class="flex border rounded px-2 w-full col-span-3">
+                            <div class="flex items-center justify-center border-l w-3/4">
+                                <input type="text" placeholder="0" class="outline-none border-l w-full" v-model="paidIn" dir="ltr">
+                                <span>(ریال)</span>
+                            </div>
+                            <select v-model="typeIn" class="w-1/4 outline-none">
+                                <option value="کارتخوان1">کارتخوان1</option>
+                                <option value="کارتخوان2">کارتخوان2</option>
+                                <option value="بیسیم1">بیسیم1</option>
+                                <option value="بیسیم2">بیسیم2</option>
+                                <option value="چک1">چک1</option>
+                                <option value="چک2">چک2</option>
+                                <option value="نقدی">نقدی</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-flow-col grid-cols-4 items-center gap-1 lg:col-span-3">
+                        <span>توضیحات:</span>
+                        <input type="text" v-model="descriptionIn" placeholder="توضیحات" class="border rounded px-2 w-full outline-none col-span-3">
+                    </div>
+                    <div class="w-full lg:col-span-2">
+                        <button class="bg-blue-500 text-white p-1 px-3 rounded w-full hover:bg-blue-600 shadow-md hover:shadow-none" @click="postEarning">ثبت ورودی</button>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
     <Loading v-if="loading"></Loading>
 </template>
+
+<style scoped>
+input{
+    padding:5px;
+}
+</style>
