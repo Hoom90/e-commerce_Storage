@@ -1,8 +1,6 @@
 <script setup>
-import store from '../store';
-
 import axios from 'axios';
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import Loading from '../components/loading.vue'
 import serverURL from '../config/serverAddress'
 import router from '../config'
@@ -10,84 +8,90 @@ import dayjs from 'dayjs'
 import jalaliday from 'jalaliday'
 dayjs.extend(jalaliday)
 
-const dbData = ref(null)
-const dbData2 = ref(null)
+const balanceHistories = ref(null)
+const itemHistories = ref(null)
+const balanceTransition = ref(null)
+
+const historyDateData = ref([])
+const balanceData = ref([])
+const selectedDateLogs = ref([])
+const selectedDateItemLogs = ref([])
+
 const message = ref(null)
 const loading = ref(false)
 const init = ref(true)
 
-const historyData = ref([])
-const balanceData = ref([])
-const logsData = ref([])
-
+const dayProfit = ref(null)
 const monthProfit = ref(null)
 const weekProfit = ref(null)
 
-let logs = ref(null)
-let balance = ref(null)
+onMounted(async()=>{
+    getData()
+})
 
 const getData = async() => {
     loading.value = true
-    initializeVariables()
-    await getLogs()
-    await getBalance()
-    // await setBalance()
-    await setLog()
-    await setHistory()
+    // await getBalance()
+    await getBalanceHistories()
+    await getItemHistories()
     loading.value = false
 }
 
-const initializeVariables = () =>{
-    dbData.value = null
-    dbData2.value = null
-    historyData.value = []
-    balanceData.value = []
-    logsData.value = []
-    logs.value = null
-    balance.value = null
-}
-
-// Get All Balance Logs
-const getLogs = async () =>{
-    await axios.get(serverURL + "/api/balanceHistories/").then(Response =>{
-        dbData.value = Response.data
-    })
-    .catch(function (error) { console.log(error), loading.value = false,message.value = error})
-}
-
-// Get Last Balance
-const getBalance = async () =>{
-    await axios.get(serverURL + "/api/balanceTransaction/").then((Response)=>{
-        dbData2.value = Response.data
-    })
-    .catch(function (error) { console.log(error), loading.value = false,message.value = error})
-}
-
-const setHistory = async() => {
-    const sample = [];
-    await dbData.value.forEach(item => {
+// Get All Balance History
+const getBalanceHistories = async () =>{
+    await axios.get(serverURL + "/api/balanceHistories/").then(res =>{
+        let data = res.data
+        let sample = [];
+        // find All Dates which has History
+        data.forEach(item => {
         if (!sample.includes(item.date)) {
-        historyData.value.push(item);
-        sample.push(item.date);
+            historyDateData.value.push(item);
+            sample.push(item.date);
         }
+        balanceHistories.value = data
     });
+    })
+    .catch(function (error) {
+        console.log(error),
+        loading.value = false,
+        message.value = error
+    })
 }
 
-// const setBalance = async()=>{
-//     const sample = [];
-//     await dbData2.value.forEach( item =>{
-//         if (!sample.includes(item.date)) {
-//             balanceData.value.push(item);
-//             sample.push(item.date);
-//         }
+// Get All Item History
+const getItemHistories = async () =>{
+    await axios.get(serverURL + "/api/itemHistories/").then(res =>{
+        let data = res.data
+        let sample = [];
+        // find All Dates which has History
+        data.forEach(item => {
+        itemHistories.value = data
+    });
+    })
+    .catch(function (error) {
+        console.log(error),
+        loading.value = false,
+        message.value = error
+    })
+}
+// Get Balance
+// const getBalance = async () =>{
+//     await axios.get(serverURL + "/api/balanceTransaction/").then(res=>{
+//         let data = res.data
+//         const sample = [];
+//         data.forEach( item =>{
+//             if (!sample.includes(item.date)) {
+//                 balanceTransition.value.push(item);
+//                 sample.push(item.date);
+//             }
+//         })
+//     })
+//     .catch(function (error) {
+//         console.log(error),
+//         loading.value = false,
+//         message.value = error
 //     })
 // }
-
-const setLog = async() =>{
-    await dbData.value.forEach(item => {
-        logsData.value.push(item);
-    });
-}
 
 const patchData = async (index) =>{
     loading.value = true
@@ -164,52 +168,39 @@ const patchData = async (index) =>{
 }
 
 const handleSelectedDate = (date) =>{
-    logs.value = []
-    balance.value = null
-    let card = 0,cash=0
-    logsData.value.forEach(item =>{
-        if(date == item.date && (item.card || item.cash) ){
-            card += parseInt(item.card)
-            cash += parseInt(item.cash)
+    let income = 0, debt = 0 ,current = 0
+    balanceHistories.value.forEach(item =>{
+        if(date == item.date ){
+            if(parseInt(item.amount) > 0){
+                income += parseInt(item.amount)
+            }
+            if(parseInt(item.amount) < 0){
+                debt += (parseInt(item.amount)*-1)
+            }
+            current += parseInt(item.amount)
         }
     })
-    balance.value = {
-        'card':card,
-        'cash':cash,
-        'date':date
-    }
-    logsData.value.forEach(item =>{
+    selectedDateLogs.value = []
+    balanceHistories.value.forEach(item =>{
+        if(date == item.date ){
+            item.description = item.description == '' ? '-' : item.description 
+            selectedDateLogs.value.push(item)
+        }
+    })
+    document.querySelector("#selectedDateIncome").innerText = income.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+    document.querySelector("#selectedDateDebt").innerText = debt.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+    document.querySelector("#selectedDateCurrent").innerText = current.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+    balanceHistories.value.forEach(item =>{
         if(date == item.date){
-            logs.value.push(item)
+            document.querySelector("#selectedDate").innerText = item.date
         }
     })
-    calculateBalance(date)
-}
-
-const calculateBalance = (date) =>{
-    let temp = []
-    dbData2.value.forEach(item => {
-        if (item.date == date) {
-            temp.push(item);
+    selectedDateItemLogs.value = []
+    itemHistories.value.forEach(item =>{
+        if(date == item.date ){
+            selectedDateItemLogs.value.push(item)
         }
-    });
-    let income = 0 , outcome = 0 ,balance=0
-    temp.forEach(item => {
-        income += parseInt(item.income)
-        outcome += parseInt(item.outcome)
-    });
-    if(parseInt(outcome) < 0){
-        balance = parseInt(income) + parseInt(outcome)
-    }
-    else{
-        balance = parseInt(income) - parseInt(outcome)
-    }
-    balanceData.value = {
-        income,
-        outcome,
-        balance,
-        date
-    }
+    })
 }
 
 const handleLogs = (index) =>{
@@ -222,7 +213,9 @@ const handleLogs = (index) =>{
     }
 }
 
-getData()
+// .toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+// .toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+// .toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 
 </script>
 <template>
@@ -232,68 +225,92 @@ getData()
             <span>&#62;</span>
             <div>دخل و خرج ها</div>
         </div>
-        <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
+        <button class="absolute w-full flex justify-between top-0 left-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
             {{message}}
             <i>x</i>
         </button>
-        <div class='grid grid-flow-col grid-cols-6 gap-1 w-full px-[20px] h-[75vh]'>
+        <div class="grid lg:grid-flow-col lg:grid-cols-6 gap-1 w-full px-[20px] lg:h-[75vh]">
 
-          <!-- closed accounts -->
-          <div :class="logs ? 'col-span-1 overflow-y-auto border h-full' : 'col-span-6 overflow-y-auto border h-full'">
-              <div class="border-b bg-white">
-                  <div class="py-2 px-3 flex justify-center items-center truncate">تاریخ</div>
-              </div>
-              <div class="flex flex-col" v-if="historyData != null" id='historyDataContainer'>
-                  <div v-for="(item,index) in historyData" class="grid grid-flow-col border-b odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" v-bind:key='index'>
-                      <button class="flex justify-center items-center truncate p-2 px-3" @click="handleSelectedDate(item.date)">{{ item.date }}</button>
-                  </div>
-              </div>
-          </div>
-
-          <!-- table -->
-          <div :class="logs ? 'col-span-5 h-full border' : ''" v-if="logs">
-            <div v-if="balance" class="flex flex-col">
-                <div class="flex justify-center items-center gap-10 border-b p-3">
-                    <p>نقد: <span dir="ltr">{{ balance.cash }}</span><span> تومان</span></p>
-                    <p>کارت به کارت:<span dir="ltr">{{ balance.card }}</span><span> تومان</span></p>
-                    <p class="text-red-500">{{ balance.date }}</p>
+            <!-- history Dates Data -->
+            <div class="lg:col-span-1 overflow-y-auto border h-full">
+                <div class="border-b bg-white">
+                    <div class="py-2 px-3 flex justify-center items-center truncate">تاریخ</div>
                 </div>
-                <div class="flex flex-col md:flex-row justify-center items-center gap-10 p-[20px]">
-                    <p>درآمد امروز: {{ balanceData.income ? balanceData.income.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0' }} تومان</p>
-                    <p>بدهی امروز: <span dir="ltr">{{ balanceData.outcome ? balanceData.outcome.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0' }}</span> تومان</p>
-                    <p>وضعیت دخل امروز: <span dir="ltr">{{ balanceData.balance ? balanceData.balance.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0' }}</span> تومان</p>
+                <div class="flex flex-col" v-if="historyDateData != null" id='historyDateDataContainer'>
+                    <div v-for="(item,index) in historyDateData" class="grid grid-flow-col border-b odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" v-bind:key='index'>
+                        <button class="flex justify-center items-center truncate p-2 px-3" @click="handleSelectedDate(item.date)">{{ item.date }}</button>
+                    </div>
                 </div>
             </div>
-            <div class="h-[90%]"> 
-                <!-- header -->
-                <div class="grid grid-flow-col border-b bg-white">
-                    <div class="py-2 px-3 flex justify-center">نام کاربر</div>
-                    <div class="py-2 px-3 flex justify-center">هزینه ها</div>
-                    <div class="py-2 px-3 flex justify-center">توضیحات</div>
+
+            <!-- table -->
+            <div class="flex flex-col lg:col-span-5 gap-1">
+                <!-- date -->
+                <div class="flex justify-center items-center gap-10 border p-1 text-red-500 hover:bg-red-500 hover:text-white" id="selectedDate" dir="ltr">----/--/--</div>
+                <!-- income debt current -->
+                <div class="border">
+                    <div class="border-b flex justify-between bg-blue-100 p-1 px-[20px] hover:bg-blue-200">
+                        <span>دخل:</span>
+                        <span id="selectedDateCurrent" dir="ltr">-</span>
+                        <span>(ریال)</span>
+                    </div>
+                    <div class="border-b flex justify-between bg-green-100 p-1 px-[20px] hover:bg-green-200">
+                        <span>درآمد:</span>
+                        <span id="selectedDateIncome">-</span>
+                        <span>(ریال)</span>
+                    </div>
+                    <div class="flex justify-between bg-red-100 p-1 px-[20px] hover:bg-red-200">
+                        <span>بدهی:</span>
+                        <span id="selectedDateDebt">-</span>
+                        <span>(ریال)</span>
+                    </div>
                 </div>
-                <!-- body -->
-                <div id="table">
-                    <div v-for="(data,index) in logs" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" :name="'persons' + index" v-bind:key='index'>
-                        <div class="grid grid-flow-col grid-cols-3 w-full p-1 border-b">
-                            <span class="flex gap-3 justify-center">{{ data.personName ? data.personName : "شما" }}</span>
-                            <p v-if='data.cost' class="flex gap-3 justify-center">
-                                <span dir="ltr">
-                                    {{ data.cost }}
-                                </span>
-                                <span>تومان</span>
-                            </p>
-                            <p v-if='data.cash || data.card' class="flex gap-3 justify-center">
-                                <span dir="ltr">
-                                    {{ ((data.cash ? parseInt(data.cash) : 0) + (data.card ? parseInt(data.card) : 0)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}
-                                </span>
-                                <span>تومان</span>
-                            </p>
-                            <span class="flex gap-3 justify-center">{{ data.description ? data.description : 'نقدی و کارت' }}</span>
+                <!-- histories -->
+                <div class="flex flex-col lg:flex-row gap-1 h-full text-[12px]">
+                    <!-- balance history -->
+                    <div class="lg:w-1/2 h-full border">
+                        <!-- header -->
+                        <div class="grid grid-flow-col grid-cols-4 border-b bg-white">
+                            <div class="py-2 px-3 flex justify-center">نام کاربر</div>
+                            <div class="py-2 px-3 flex justify-center">هزینه ها</div>
+                            <div class="py-2 px-3 flex justify-center">نوع پرداخت</div>
+                            <div class="py-2 px-3 flex justify-center">توضیحات</div>
+                        </div>
+                        <!-- body -->
+                        <div>
+                            <div v-for="(data,index) in selectedDateLogs" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" v-bind:key='index'>
+                                <div class="grid grid-flow-col grid-cols-4 border-b text-center">
+                                    <span>{{ data.receiverName }}</span>
+                                    <span dir="ltr">{{ data.amount }}</span>
+                                    <span>{{ data.type }}</span>
+                                    <span>{{ data.description }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- item history -->
+                    <div class="lg:w-1/2 h-full border">
+                        <!-- header -->
+                        <div class="grid grid-flow-col grid-cols-5 border-b bg-white">
+                            <div class="py-2 px-3 flex justify-center">نام کالا</div>
+                            <div class="py-2 px-3 flex justify-center">شرکت</div>
+                            <div class="py-2 px-3 flex justify-center">عملیات</div>
+                            <div class="py-2 px-3 flex justify-center">تعداد</div>
+                            <div class="py-2 px-3 flex justify-center">واحد</div>
+                        </div>
+                        <!-- body -->
+                        <div v-for="(data,index) in selectedDateItemLogs" class="odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" :name="'persons' + index" v-bind:key='index'>
+                            <div class="grid grid-flow-col grid-cols-5 border-b text-center">
+                                <span>{{ data.item }}</span>
+                                <span>{{ data.company }}</span>
+                                <span>{{ data.action }}</span>
+                                <span>{{ data.newAmount }}</span>
+                                <span>{{ data.unit }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-          </div>
         </div>
     </main>
     <Loading v-if="loading"></Loading>
