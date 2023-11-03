@@ -18,10 +18,10 @@ let name = ref(null)
 let company = ref(null)
 let purchasePrice = ref(null)
 let salesPrice = ref(null)
-let profit = ref(null)
+let profit = ref(0)
 let amount = ref(null)
 let unit = ref('عدد')
-let profitxamount = ref(null)
+let profitxamount = ref(0)
 
 const dbData = ref(props.data)
 const modal = ref(props.modal)
@@ -79,9 +79,9 @@ const duplicateItemData = (index) => {
 const calculator = () => {
     if(purchasePrice.value == null) return
     if(salesPrice.value == null) return
-    profit.value = formatData(parseInt(salesPrice.value) - parseInt(purchasePrice.value))
+    profit.value = parseInt(salesPrice.value) - parseInt(purchasePrice.value)
     if(amount.value == null) return
-    profitxamount.value = formatData(parseInt(profit.value) * parseInt(amount.value))
+    profitxamount.value = parseInt(profit.value) * parseInt(amount.value)
 }
 
 const calculateInitDebt = () =>{
@@ -118,7 +118,7 @@ const handleModal = () =>{
             <!-- body -->
             <div class="h-[340px] flex flex-col lg:flex-row gap-3 overflow-auto">
                 <!-- search -->
-                <div class="lg:w-1/3 border flex flex-col gap-1 my-1">
+                <div class="lg:w-1/3 border flex flex-col gap-1 my-1" v-if="dbData.length != 0">
                     <div class="flex gap-1 items-center px-1">
                         <input type="text" ref="searchBox" class="outline-none min-w-[300px] w-full" placeholder="جستجو در بین کالاهای موجود" @keyup="searchWord">
                         <img :src="SearchIconSVG" alt="SearchIconSVG">
@@ -134,7 +134,7 @@ const handleModal = () =>{
                         </button>
                     </div>
                 </div>
-                <div class="flex justify-center gap-1 my-1 border rounded-md p-2" v-if="dbData.length == 0">
+                <div class="lg:w-1/3 flex justify-center items-center border rounded-md" v-if="dbData.length == 0">
                     هیچ کالایی یافت نشد
                 </div>
                 <!-- form -->
@@ -166,7 +166,9 @@ const handleModal = () =>{
                         <div class="flex flex-col col-span-1">
                             <span>سود</span>
                             <div class="flex items-center">
-                                <input type="text" class="border border-gray-50 rounded-md outline-none px-1 text-center w-full" placeholder="سود فی کالا" name="profit" v-model="profit" disabled>(ریال)
+                                <div class="border border-gray-50 rounded-md outline-none px-1 text-center w-full">
+                                    {{profit.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}} (ریال)
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -186,7 +188,9 @@ const handleModal = () =>{
                         <div class="flex flex-col col-span-1">
                             <span>سود x مقدار</span>
                             <div class="flex items-center">
-                                <input type="text" class="border border-gray-50 rounded-md outline-none px-1 text-center w-full" placeholder="سود محموله" name="profitxamount" v-model="profitxamount" disabled>(ریال)
+                                <div class="border border-gray-50 rounded-md outline-none px-1 text-center w-full">
+                                    {{profitxamount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}} (ریال)
+                                </div>
                             </div>
                         </div>
                     </div>

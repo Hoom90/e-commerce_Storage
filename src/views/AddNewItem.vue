@@ -277,7 +277,7 @@ getData();
         <!-- search -->
         <div class="lg:w-1/3 border rounded">
           <!-- search input -->
-          <div class="h-[90%]">
+          <div class="h-[90%]" v-if="dbData.length != 0">
             <div class="flex gap-1 items-center rounded px-1">
               <input type="text" id="TableSearchBox" class="outline-none min-w-[300px] w-full" placeholder="جستجو در بین کالاهای موجود" @input="searchWord"/>
               <img :src="SearchIconSVG" alt="SearchIconSVG" />
@@ -293,7 +293,7 @@ getData();
               </button>
             </div>
           </div>
-          <div class="flex justify-center gap-1 my-1 border rounded-md p-2" v-if="!dbData">
+          <div class="flex justify-center items-center h-full gap-1 rounded-md p-2" v-if="dbData.length == 0">
             هیچ کالایی یافت نشد
           </div>
         </div>
@@ -339,7 +339,7 @@ getData();
             </div>
             <div class="flex flex-col col-span-1">
               <span>سود</span>
-              <div class="border p-[5px] bg-gray-300 rounded-md px-1 text-center" id="Profit">سود فی کالا (ریال)</div>
+              <div class="border p-[5px] bg-gray-300 rounded-md px-1 text-center" id="Profit" dir="ltr">سود فی کالا (ریال)</div>
             </div>
           </div>
           <!-- Amount Unit FinalProfit -->

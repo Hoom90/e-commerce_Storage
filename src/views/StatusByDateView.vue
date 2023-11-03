@@ -37,13 +37,12 @@ const getBalanceHistories = async () =>{
         let sample = [];
         // find All Dates which has History
         data.forEach(item => {
-            let temp = item.date
-            if (!sample.includes(temp)) {
-                historyDateData.value.push(temp);
-                sample.push(temp);
-            }
-        });
+        if (!sample.includes(item.date)) {
+            historyDateData.value.push(item);
+            sample.push(item.date);
+        }
         balanceHistories.value = data
+    });
     })
     .catch(function (error) {
         console.log(error),
@@ -59,8 +58,8 @@ const getItemHistories = async () =>{
         let sample = [];
         // find All Dates which has History
         data.forEach(item => {
-            itemHistories.value = data
-        });
+        itemHistories.value = data
+    });
     })
     .catch(function (error) {
         console.log(error),
@@ -83,8 +82,7 @@ const handleSelectedDate = (date) =>{
     document.querySelector("#selectedYear").value = date.split('-')[0]
     let income = 0, debt = 0 ,current = 0
     balanceHistories.value.forEach(item =>{
-        let temp = item.date
-        if(date == temp ){
+        if(date == item.date ){
             if(parseInt(item.amount) > 0){
                 income += parseInt(item.amount)
             }
@@ -96,8 +94,7 @@ const handleSelectedDate = (date) =>{
     })
     selectedDateLogs.value = []
     balanceHistories.value.forEach(item =>{
-        let temp = item.date
-        if(date == temp ){
+        if(date == item.date ){
             item.description = item.description == '' ? '-' : item.description 
             selectedDateLogs.value.push(item)
         }
@@ -107,8 +104,7 @@ const handleSelectedDate = (date) =>{
     document.querySelector("#selectedDateCurrent").innerText = current.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
     selectedDateItemLogs.value = []
     itemHistories.value.forEach(item =>{
-        let temp = item.date
-        if(date == temp ){
+        if(date == item.date ){
             selectedDateItemLogs.value.push(item)
         }
     })
@@ -145,11 +141,11 @@ const setYear = () =>{
             <!-- header -->
             <!-- state nav -->
             <div class="flex mb-[10px]">
-                <RouterLink to="/status" class="border-b-2 p-1 px-3 border-blue-500">روزانه</RouterLink>
-                <RouterLink to="/status/week" class="border-b-2 p-1 px-3 hover:border-blue-500">هفتگی</RouterLink>
+                <RouterLink to="/status" class="border-b-2 p-1 px-3 hover:border-blue-500">روزانه</RouterLink>
+                <RouterLink to="/status/week" class="border-b-2 p-1 px-3 border-blue-500">هفتگی</RouterLink>
                 <RouterLink to="/status/month" class="border-b-2 p-1 px-3 hover:border-blue-500">ماهانه</RouterLink>
                 <RouterLink to="/status/year" class="border-b-2 p-1 px-3 hover:border-blue-500">سالانه</RouterLink>
-                <RouterLink to="/status/date" class="border-b-2 p-1 px-3 hover:border-blue-500">تاریخ</RouterLink>
+                <RouterLink to="/status/date" class="border-b-2 p-1 px-3 border-blue-500">تاریخ</RouterLink>
             </div>
             <!-- body -->
             <div class="grid lg:grid-flow-col lg:grid-cols-6 gap-1 w-full lg:h-[70vh]">
@@ -158,7 +154,7 @@ const setYear = () =>{
                 <div class="lg:col-span-1 overflow-y-auto border h-full">
                     <div class="flex border-b" @keyup="handleSelectedDate(setYear()+'-'+setMonth()+'-'+setDay())">
                         <img class="border-l p-1" :src="SearchIconSVG" alt="S">
-                        <div class="flex items-center p-1">
+                        <div class="flex p-1">
                             <input type="text" class="w-full text-center outline-none" id="selectedDay" placeholder="روز">-
                             <input type="text" class="w-full text-center outline-none" id="selectedMonth" placeholder="ماه">-
                             <input type="text" class="w-full text-center outline-none" id="selectedYear" placeholder="سال">
@@ -169,7 +165,7 @@ const setYear = () =>{
                     </div>
                     <div class="flex flex-col" v-if="historyDateData != null" id='historyDateDataContainer'>
                         <div v-for="(item,index) in historyDateData" class="grid grid-flow-col border-b odd:bg-[#f6f6f6] hover:bg-[#e9e9e9]" v-bind:key='index'>
-                            <button class="flex justify-center items-center truncate p-2 px-3" @click="handleSelectedDate(item)">{{ item }}</button>
+                            <button class="flex justify-center items-center truncate p-2 px-3" @click="handleSelectedDate(item.date)">{{ item.date }}</button>
                         </div>
                     </div>
                 </div>

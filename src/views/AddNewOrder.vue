@@ -152,7 +152,7 @@ getData()
             <div>
                 <!-- search -->
                 <div>
-                    <div class="flex flex-col gap-1 my-1" v-if="dbData != null">
+                    <div class="flex flex-col gap-1 my-1" v-if="dbData.length !=0">
                         <!-- search input -->
                         <div class="flex gap-1 items-center border rounded px-1">
                             <input type="text" ref="searchBox" class="outline-none w-full"
@@ -172,7 +172,7 @@ getData()
                             </button>
                         </div>
                     </div>
-                    <div class="flex justify-center gap-1 my-1 border rounded-md p-3 min-h-[180px]" v-if="dbData != null && dbData.length == 0">
+                    <div class="flex justify-center items-center gap-1 my-1 border rounded-md p-3 min-h-[180px]" v-if="dbData.length == 0">
                         هیچ کالایی یافت نشد
                     </div>
                 </div>

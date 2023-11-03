@@ -37,13 +37,13 @@ const getBalanceHistories = async () =>{
         let sample = [];
         // find All Dates which has History
         data.forEach(item => {
-            let temp = item.date
+            let temp = item.date.split('-')[0]
             if (!sample.includes(temp)) {
                 historyDateData.value.push(temp);
                 sample.push(temp);
             }
+            balanceHistories.value = data
         });
-        balanceHistories.value = data
     })
     .catch(function (error) {
         console.log(error),
@@ -70,7 +70,7 @@ const getItemHistories = async () =>{
 }
 //#endregion
 
-//#region Status Type Is Selected By Day
+//#region Status Type Is Selected By Year
 
 const selectedDateLogs = ref([])
 const selectedDateItemLogs = ref([])
@@ -78,12 +78,10 @@ const historyDateData = ref([])
 
 
 const handleSelectedDate = (date) =>{
-    document.querySelector("#selectedDay").value = date.split('-')[2]
-    document.querySelector("#selectedMonth").value = date.split('-')[1]
     document.querySelector("#selectedYear").value = date.split('-')[0]
     let income = 0, debt = 0 ,current = 0
     balanceHistories.value.forEach(item =>{
-        let temp = item.date
+        let temp = item.date.split('-')[0]
         if(date == temp ){
             if(parseInt(item.amount) > 0){
                 income += parseInt(item.amount)
@@ -96,7 +94,7 @@ const handleSelectedDate = (date) =>{
     })
     selectedDateLogs.value = []
     balanceHistories.value.forEach(item =>{
-        let temp = item.date
+        let temp = item.date.split('-')[0]
         if(date == temp ){
             item.description = item.description == '' ? '-' : item.description 
             selectedDateLogs.value.push(item)
@@ -107,7 +105,7 @@ const handleSelectedDate = (date) =>{
     document.querySelector("#selectedDateCurrent").innerText = current.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
     selectedDateItemLogs.value = []
     itemHistories.value.forEach(item =>{
-        let temp = item.date
+        let temp = item.date.split('-')[0]
         if(date == temp ){
             selectedDateItemLogs.value.push(item)
         }
@@ -135,7 +133,7 @@ const setYear = () =>{
             <span>&#62;</span>
             <div>دخل و خرج ها</div>
             <span>&#62;</span>
-            <div>روزانه</div>
+            <div>سالانه</div>
         </div>
         <button class="absolute w-full flex justify-between top-0 left-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
             {{message}}
@@ -145,10 +143,10 @@ const setYear = () =>{
             <!-- header -->
             <!-- state nav -->
             <div class="flex mb-[10px]">
-                <RouterLink to="/status" class="border-b-2 p-1 px-3 border-blue-500">روزانه</RouterLink>
+                <RouterLink to="/status" class="border-b-2 p-1 px-3 hover:border-blue-500">روزانه</RouterLink>
                 <RouterLink to="/status/week" class="border-b-2 p-1 px-3 hover:border-blue-500">هفتگی</RouterLink>
                 <RouterLink to="/status/month" class="border-b-2 p-1 px-3 hover:border-blue-500">ماهانه</RouterLink>
-                <RouterLink to="/status/year" class="border-b-2 p-1 px-3 hover:border-blue-500">سالانه</RouterLink>
+                <RouterLink to="/status/year" class="border-b-2 p-1 px-3 border-blue-500">سالانه</RouterLink>
                 <RouterLink to="/status/date" class="border-b-2 p-1 px-3 hover:border-blue-500">تاریخ</RouterLink>
             </div>
             <!-- body -->
@@ -156,11 +154,9 @@ const setYear = () =>{
 
                 <!-- history Dates Data -->
                 <div class="lg:col-span-1 overflow-y-auto border h-full">
-                    <div class="flex border-b" @keyup="handleSelectedDate(setYear()+'-'+setMonth()+'-'+setDay())">
+                    <div class="flex border-b" @keyup="handleSelectedDate(setYear())">
                         <img class="border-l p-1" :src="SearchIconSVG" alt="S">
-                        <div class="flex items-center p-1">
-                            <input type="text" class="w-full text-center outline-none" id="selectedDay" placeholder="روز">-
-                            <input type="text" class="w-full text-center outline-none" id="selectedMonth" placeholder="ماه">-
+                        <div class="flex p-1">
                             <input type="text" class="w-full text-center outline-none" id="selectedYear" placeholder="سال">
                         </div>
                     </div>

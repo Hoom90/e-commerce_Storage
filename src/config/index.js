@@ -4,6 +4,10 @@ import HomeView from "../views/HomeView.vue";
 import Warehouse from "../views/WarehouseView.vue";
 import Cashier from "../views/CashierView.vue";
 import Status from "../views/StatusView.vue";
+import StatusByWeek from "../views/StatusByWeekView.vue";
+import StatusByMonth from "../views/StatusByMonthView.vue";
+import StatusByYear from "../views/StatusByYearView.vue";
+import StatusByDate from "../views/StatusByDateView.vue";
 import AddNewItem from "../views/AddNewItem.vue";
 import AddNewListItem from "../views/AddNewListItem.vue";
 import AddNewOrder from "../views/AddNewOrder.vue";
@@ -47,7 +51,28 @@ const router = createRouter({
     },
     {
       path: "/status",
-      component: Status,
+      children: [
+        {
+          path: "",
+          component: Status,
+        },
+        {
+          path: "week",
+          component: StatusByWeek,
+        },
+        {
+          path: "month",
+          component: StatusByMonth,
+        },
+        {
+          path: "year",
+          component: StatusByYear,
+        },
+        {
+          path: "date",
+          component: StatusByDate,
+        },
+      ],
     },
     {
       path: "/login",
