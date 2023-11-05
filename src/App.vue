@@ -48,9 +48,8 @@ const handleLogout = () =>{
           </svg>
         </button>
         <div class="hidden absolute left-0 top-[10svh] bg-slate-50 shadow-[0px_5px_5px_#c9c9c9] w-full px-[20px]" id="dropdown" @click="handleDropdown">
-          <RouterLink to="/" exact-active-class="bg-blue-500" class="p-2 px-3 border-b">میزکار</RouterLink>
+          <RouterLink to="/" exact-active-class="bg-blue-500" class="p-2 px-3 border-b">صندوق</RouterLink>
           <RouterLink to="/warehouse" exact-active-class="bg-blue-500" class="p-2 px-3 border-b">انبارداری</RouterLink>
-          <RouterLink to="/cashier" exact-active-class="bg-blue-500" class="p-2 px-3 border-b">صندوق</RouterLink>
           <RouterLink to="/status" exact-active-class="bg-blue-500" class="p-2 px-3 border-b">آمار</RouterLink>
         </div>
       </div>
@@ -64,9 +63,8 @@ const handleLogout = () =>{
     <div class="mt-[10svh] w-full flex h-[90svh]">
       <div class="bg-white h-full shadow-[0px_3px_3px_#c9c9c9] z-10 flex flex-col">
         <div class="hidden md:flex bg-slate-50 h-full flex-col">
-          <RouterLink to="/" active-class="bg-blue-500" class="p-2 px-3 border-b hover:bg-blue-600 text-center">میزکار</RouterLink>
+          <RouterLink to="/" active-class="bg-blue-500" class="p-2 px-3 border-b hover:bg-blue-600 text-center">صندوق</RouterLink>
           <RouterLink to="/warehouse" active-class="bg-blue-500" class="p-2 px-3 border-b hover:bg-blue-600 text-center">انبارداری</RouterLink>
-          <RouterLink to="/cashier" active-class="bg-blue-500" class="p-2 px-3 border-b hover:bg-blue-600 text-center">صندوق</RouterLink>
           <RouterLink to="/status" active-class="bg-blue-500" class="p-2 px-3 border-b hover:bg-blue-600 text-center">آمار</RouterLink>
         </div>
       </div>

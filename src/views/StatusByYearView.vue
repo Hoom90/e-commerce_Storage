@@ -147,7 +147,6 @@ const setYear = () =>{
                 <RouterLink to="/status/week" class="border-b-2 p-1 px-3 hover:border-blue-500">هفتگی</RouterLink>
                 <RouterLink to="/status/month" class="border-b-2 p-1 px-3 hover:border-blue-500">ماهانه</RouterLink>
                 <RouterLink to="/status/year" class="border-b-2 p-1 px-3 border-blue-500">سالانه</RouterLink>
-                <RouterLink to="/status/date" class="border-b-2 p-1 px-3 hover:border-blue-500">تاریخ</RouterLink>
             </div>
             <!-- body -->
             <div class="grid lg:grid-flow-col lg:grid-cols-6 gap-1 w-full lg:h-[70vh]">
