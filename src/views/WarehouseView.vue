@@ -151,18 +151,21 @@ const updateIsModalOpen = (value) =>{
 
         <div class="flex justify-between border rounded">
             <p class="text-[24px] p-1 px-5">ثبت کالا</p>
-            <div class="flex justify-center items-center gap-10 relative">
+            <div class="justify-center items-center gap-10 relative hidden sm:flex">
                 <button class="flex justify-center items-center w-full h-full" @click="state.tab = 1">قیمت</button>
                 <button class="flex justify-center items-center w-full h-full" @click="state.tab = 2">نقدینگی</button>
                 <div class="border-b border-2 absolute -bottom-0 border-blue-500 transition-all ease-in-out" :class="state.tab == 1 ? '-right-1 w-[50px]' : 'right-[80px] w-[60px]'"></div>
             </div>
-            <div class="flex">
-                
-                <button class="flex justify-center items-center text-white rounded-l bg-blue-500 hover:bg-blue-600 px-2" @click="() =>{IsModalOpen = true}">
-                    <img :src="AddIconSVG" alt="+"/>
-                    <span>| کالای جدید</span>
-                </button>
-            </div>
+            <button class="flex justify-center items-center text-white rounded-l bg-teal-500 hover:bg-teal-600 px-2" @click="() =>{IsModalOpen = true}">
+                <img :src="AddIconSVG" alt="+"/>
+                <span>| کالای جدید</span>
+            </button>
+        </div>
+
+        <div class="grid grid-flow-col grid-cols-2 mt-3 border rounded relative sm:hidden">
+            <button class="p-3" @click="state.tab = 1">قیمت</button>
+            <button class="p-3" @click="state.tab = 2">نقدینگی</button>
+            <div class="border-b border-2 absolute -bottom-0 border-blue-500 transition-all ease-in-out w-1/2" :class="state.tab == 1 ? '-right-0' : 'right-1/2'"></div>
         </div>
 
         <inventory v-if="state.tab == 1" :data="state.inventoryData"/>
