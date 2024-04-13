@@ -10,13 +10,28 @@ import AddNewItem from "../views/AddNewItem.vue";
 import AddNewListItem from "../views/AddNewListItem.vue";
 import AddNewOrder from "../views/AddNewOrder.vue";
 import EditItem from "../views/EditItem.vue";
+import { reactive } from "vue";
 
+const state = reactive({
+  layout: "",
+});
+const screenWidth = window.innerWidth;
+const isMobileLayout = screenWidth < 600;
+
+if (isMobileLayout) {
+  state.layout = "mobile";
+} else {
+  state.layout = "desktop";
+}
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: "/",
       component: Cashier,
+      meta: {
+        layout: state.layout,
+      },
     },
     {
       path: "/warehouse",
@@ -42,6 +57,9 @@ const router = createRouter({
           component: AddNewOrder,
         },
       ],
+      meta: {
+        layout: state.layout,
+      },
     },
     {
       path: "/status",
@@ -63,6 +81,9 @@ const router = createRouter({
           component: StatusByYear,
         },
       ],
+      meta: {
+        layout: state.layout,
+      },
     },
     {
       path: "/login",
@@ -77,7 +98,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const publicPages = ["/login"];
   const authRequired = !publicPages.includes(to.path);
-  const loggedIn = sessionStorage.getItem("token");
+  const loggedIn = localStorage.getItem("token");
   // trying to access a restricted page + not logged in
   // redirect to login page
   if (authRequired && !loggedIn) {
@@ -86,4 +107,21 @@ router.beforeEach((to, from, next) => {
     next();
   }
 });
+
+// Add resize event listener to dynamically change layout based on screen size
+// window.addEventListener("resize", () => {
+//   const screenWidth = window.innerWidth;
+//   const isMobileLayout = screenWidth < 600;
+
+//   router.currentRoute.value.matched.forEach(routeRecord => {
+//     if (routeRecord.meta.layout === 'desktop' && isMobileLayout) {
+//       // routeRecord.instances.default.$options.layout = 'mobile';
+//       routeRecord.meta.layout = 'mobile'
+//     } else {
+//       routeRecord.meta.layout = 'desktop'
+//       // routeRecord.instances.default.$options.layout = 'desktop';
+//     }
+//   });
+// });
+
 export default router;

@@ -1,7 +1,5 @@
 import authHeader from "./auth-header";
-import serverURL from "../config/serverAddress";
-
-const API_URL = serverURL + "/api/";
+const API_URL = import.meta.env.VITE_BASE_URL
 
 class UserService {
   async getPublicContent() {

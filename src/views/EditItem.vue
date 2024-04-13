@@ -3,13 +3,14 @@ import store from '../store';
 
 import { ref } from 'vue'
 import Loading from '../components/loading.vue'
-import serverURL from '../config/serverAddress'
 import ArrowIconSVG from '../assets/arrowLeftIcon.svg'
 import router from '../config'
 import route from '../config'
 import dayjs from 'dayjs'
 import jalaliday from 'jalaliday'
 import axios from 'axios'
+import apiPath from '../composables/api-path';
+
 dayjs.extend(jalaliday)
 
 let item = {
@@ -33,7 +34,7 @@ const errorMessage = ref(null)
 
 const getData = async () => {
     loading.value = true;
-    await axios.get(serverURL + "/api/itemTransaction/" + route.currentRoute.value.params.id)
+    await axios.get(apiPath.storage.getSingleItem(route.currentRoute.value.params.id))
     .then((res)=>{
         item = 
         {
@@ -66,9 +67,9 @@ const patchData  = async() =>{
     }
     item.update = dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
     const body = item
-    await axios.patch(serverURL + "/api/itemTransaction/" + route.currentRoute.value.params.id, body, {
+    await axios.patch(apiPath.storage.editSingleItem(route.currentRoute.value.params.id), body, {
         headers: {
-            'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
+            'Authorization': 'Bearer ' + localStorage.getItem('token'),
         }
     })
     .then(
@@ -85,16 +86,15 @@ const patchData  = async() =>{
 
 const deleteData  = async() =>{
     let description = document.querySelector('#description').value
-    let id = route.currentRoute.value.params.id
     const body = {
         description: description,
         date: dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
     }
     const headers= {
-        'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
+        'Authorization': 'Bearer ' + localStorage.getItem('token'),
     }
     loading.value = true
-    await axios.delete(serverURL + "/api/itemTransaction/" + id,{headers,data:body})
+    await axios.delete(apiPath.storage.deleteSingleItem(route.currentRoute.value.params.id),{headers,data:body})
     .then(
         router.push('/warehouse')
     )

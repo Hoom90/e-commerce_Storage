@@ -3,7 +3,6 @@ import axios from 'axios';
 import { onMounted, ref } from 'vue'
 import SearchIconSVG from '../assets/searchIcon.svg'
 import Loading from '../components/loading.vue'
-import serverURL from '../config/serverAddress'
 import router from '../config'
 import dayjs from 'dayjs'
 import jalaliday from 'jalaliday'
@@ -32,7 +31,7 @@ const getData = async() => {
 
 // Get All Balance History
 const getBalanceHistories = async () =>{
-    await axios.get(serverURL + "/api/balanceHistories/").then(res =>{
+    await axios.get(import.meta.env.VITE_BASE_URL + "/balanceHistories/").then(res =>{
         let data = res.data
         let sample = [];
         // find All Dates which has History
@@ -54,7 +53,7 @@ const getBalanceHistories = async () =>{
 
 // Get All Item History
 const getItemHistories = async () =>{
-    await axios.get(serverURL + "/api/itemHistories/").then(res =>{
+    await axios.get(import.meta.env.VITE_BASE_URL + "/itemHistories/").then(res =>{
         let data = res.data
         let sample = [];
         // find All Dates which has History

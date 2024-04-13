@@ -5,11 +5,11 @@ import SearchIconSVG from '../assets/searchIcon.svg'
 import PlusIconSVG from '../assets/addIcon.svg'
 import MinusIconSVG from '../assets/reduceIcon.svg'
 import Loading from '../components/loading.vue'
-import serverURL from '../config/serverAddress'
 import router from '../config'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import jalaliday from 'jalaliday'
+import apiPath from '../composables/api-path'
 dayjs.extend(jalaliday)
 
 const dbData = ref(null)
@@ -27,7 +27,7 @@ let description = ref(null)
 // GET
 const getData = async () => {
     loading.value = true
-    await axios.get(serverURL + "/api/itemTransaction/")
+    await axios.get(apiPath.storage.getAll)
     .then((res)=>{
         dbData.value = res.data;
     })
@@ -68,8 +68,8 @@ const putData = async () => {
         description : tempDescription
     }
     // console.log(body);
-    await axios.put(serverURL + "/api/itemTransaction/" + id, body,{headers: {
-        'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
+    await axios.put(apiPath.storage.orderSingleItem(id), body,{headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('token'),
     }})
     .then(
         router.push('/')

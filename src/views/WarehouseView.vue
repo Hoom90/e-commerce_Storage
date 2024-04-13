@@ -1,60 +1,52 @@
 <script setup>
+import inventory from './warehouseView/component/inventory.vue'
 import AddIconSVG from '../assets/addIcon.svg'
-import SearchIconSVG from '../assets/searchIcon.svg'
 import InfoIconSVG from '../assets/infoIcon.svg'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref ,reactive } from 'vue'
 import Loading from '../components/loading.vue'
 import Modal from '../components/wareHouseModal.vue'
-import serverURL from '../config/serverAddress'
 import axios from 'axios'
+import apiPath from '../composables/api-path'
 
-const dbData = ref(null)
+const state = reactive({
+    inventoryData: [],
+    liquidityData: [],
+    tab:1,
+    loading:false,
+})
+
 const message = ref(null)
-const loading = ref(false)
 const IsModalOpen = ref(false)
 const errorMessage = ref(null)
 const stockAmount = ref(0)
 const liquidity = ref(0)
 
 onMounted(()=>{
-    init()
-})
-
-const init = async() =>{
-    loading.value = true
-    dbData.value = null
-    stockAmount.value = 0
-    liquidity.value = 0
-    await getData()
-    if(dbData.value){
+    getData()
+    if(state.inventoryData.length > 0){
         calculateLiquidity()
         calculateStockAmount()
     }
-    loading.value = false
-}
+})
 
 // Get All Items
 const getData = async()=> {
-    await axios.get(serverURL + "/api/itemTransaction/")
-    .then((res)=>{
-        if(res.data.length != 0){
-            dbData.value = res.data;
-        }
-        else{
-            loading.value = false
-            message.value = 'کالایی یافت نشد!'
-        }
+    state.loading = true
+    await axios.get(apiPath.storage.getAll)
+    .then((res) => {
+        state.inventoryData = res.data;
+        message.value = 'کالایی یافت نشد!'
     })
-    .catch(function (error) {
-        console.log(error);
+    .catch((error) => {
+        console.error(error);
         message.value = error
-        loading.value = false
     })
+    state.loading = false
 }
 
 const calculateLiquidity = () =>{
     let temp = 0
-    dbData.value.forEach(item => {
+    state.inventoryData.forEach(item => {
         temp = parseInt(temp) + (parseInt(item.basePrice) * parseInt(item.amount))
     });
     liquidity.value = formatData(temp)
@@ -62,7 +54,7 @@ const calculateLiquidity = () =>{
 
 const calculateStockAmount = () =>{
     let temp = 0
-    dbData.value.forEach(item =>{
+    state.inventoryData.forEach(item =>{
      temp = parseInt(temp) + parseInt(item.amount)
     })
     stockAmount.value = formatData(temp)
@@ -149,116 +141,33 @@ const updateIsModalOpen = (value) =>{
     IsModalOpen.value = value
 }
 
-init()
 </script>
 <template>
-    <main class="flex flex-col pt-[25px] justify-center items-center relative">
-        <div class="text-[24px] w-full px-5 flex items-center gap-5 justify-between -z-10">
-            <span>ثبت کالا</span>
-        </div>
-        <button class="absolute w-full flex justify-between top-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
+    <main class="relative h-[80vh]">
+        <!-- <button class="absolute w-full flex justify-between top-0 right-0 bg-red-500 text-white p-2 text-[12px]" v-if="message" @click="()=>{message = null}">
             {{message}}
             <i>x</i>
-        </button>
+        </button> -->
 
-        <div class="w-[90%]">
-            <!-- tools -->
-            <div class="flex">
-                <div class="flex w-1/3 ml-2">
-                    <button class="flex justify-center items-center text-white bg-blue-500 hover:bg-blue-600 px-2" @click="() =>{IsModalOpen = true}">
-                        <img :src="AddIconSVG" alt="+"/>
-                    </button>
-                    
-                    <div class="flex justify-between items-center border w-full px-[10px]">
-                        <input type="text" class="outline-none px-1 w-2/3 bg-transparent block" placeholder="جستجوی نام کالا" @input="searchMainTable" id="TableSearchBox">
-                        <input type="text" class="outline-none px-1 w-2/3 bg-transparent hidden" placeholder="جستجوی" @input="searchLiquidityTable" id="TableSearchBox">
-                        <img :src="SearchIconSVG" alt="SearchIconSVG">
-                    </div>
-                </div>
-                <div class="w-1/3 flex justify-center items-center">
-                    <button class="flex justify-center items-center border-b-2 border-blue-500 w-full h-full" id="TableNav" @click="handleTableNav(false)">قیمت</button>
-                </div>
-                <div class="w-1/3 flex justify-center items-center">
-                    <button class="flex justify-center items-center border-b-2 hover:border-blue-500 w-full h-full" id="TableNav" @click="handleTableNav(true)">نقدینگی</button>
-                </div>
+        <div class="flex justify-between border rounded">
+            <p class="text-[24px] p-1 px-5">ثبت کالا</p>
+            <div class="flex justify-center items-center gap-10 relative">
+                <button class="flex justify-center items-center w-full h-full" @click="state.tab = 1">قیمت</button>
+                <button class="flex justify-center items-center w-full h-full" @click="state.tab = 2">نقدینگی</button>
+                <div class="border-b border-2 absolute -bottom-0 border-blue-500 transition-all ease-in-out" :class="state.tab == 1 ? '-right-1 w-[50px]' : 'right-[80px] w-[60px]'"></div>
             </div>
-
-            <!-- body -->
-            <div class="w-full mt-3">
-                <!-- main table -->
-                <div v-if="dbData != null" class="border overflow-auto max-h-[400px] text-[12px] block" id="TableBody">
-                    <!-- header -->
-                    <div class="flex border-b">
-
-                        <div class="py-2 px-3 flex justify-center items-center w-1/5">رکورد</div>
-                        <div class="py-2 px-3 flex justify-center items-center w-1/5 border-r">نام
-                        </div>
-                        <div class="py-2 px-3 flex justify-center items-center w-1/5 border-r">فی(ریال)
-                        </div>
-                        <div class="py-2 px-3 flex justify-center items-center w-1/5 border-r">تعداد(عدد)
-                        </div>
-                        <div class="py-2 px-3 flex justify-center items-center w-1/5 border-r">تاریخ دریافت</div>
-                        
-                    </div>
-                    <!-- content --> 
-                    <div class="flex flex-col" id="tableData">
-
-                        <RouterLink :to="'/warehouse/' + data._id" v-for="(data, index) in dbData" class="flex border-b hover:bg-gray-50 cursor-pointer" v-bind:key="index">
-                            <div class="py-2 px-3 flex justify-center items-center w-1/5">{{ index + 1 }}</div>
-                            <div class="py-2 px-3 flex justify-center items-center w-1/5 border-r">{{ data.name }}</div>
-                            <div class="py-2 px-3 flex justify-center items-center w-1/5 border-r bg-green-200">
-                                {{ data.salesPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</div>
-                            <div class="py-2 px-3 flex justify-center items-center w-1/5 border-r">{{ data.amount }}</div>
-                            <div class="py-2 px-3 flex justify-center items-center w-1/5 border-r">
-                                <span dir='ltr'>{{ data.date.replace('-','/').replace('-','/') }}</span>
-                            </div>
-                        </RouterLink>
-
-                    </div>
-                </div>
-                <!-- liquidity table -->
-                <div v-if="dbData != null" class="overflow-auto max-h-[400px] text-[12px] hidden" id="TableBody">
-                    <div class="flex items-center justify-start gap-1 text-red-500">
-                        <img :src="InfoIconSVG" alt="i">
-                        <span>نام کالا ، فروشنده ، نقدینگی قابل جستجو میباشد</span>
-                    </div>
-                    <div class="border">
-                        <!-- header -->
-                        <div class="flex border-b">
-
-                            <div class="py-2 px-3 flex justify-center items-center w-1/6">رکورد</div>
-                            <div class="py-2 px-3 flex justify-center items-center w-1/6 border-r">نام</div>
-                            <div class="py-2 px-3 flex justify-center items-center w-1/6 border-r">فروشنده</div>
-                            <div class="py-2 px-3 flex justify-center items-center w-1/6 border-r">تعداد(عدد)</div>
-                            <div class="py-2 px-3 flex justify-center items-center w-1/6 border-r">تاریخ دریافت</div>
-                            <div class="py-2 px-3 flex justify-center items-center w-1/6 border-r">نقدینگی</div>
-
-                        </div>
-                        <!-- content --> 
-                        <div class="flex flex-col" id="tableData">
-
-                            <RouterLink :to="'/warehouse/' + data._id" v-for="(data, index) in dbData" class="flex border-b hover:bg-gray-50 cursor-pointer" v-bind:key="index">
-                                <div class="py-2 px-3 flex justify-center items-center w-1/6">{{ index + 1 }}</div>
-                                <div class="py-2 px-3 flex justify-center items-center w-1/6 border-r">{{ data.name }}</div>
-                                <div class="py-2 px-3 flex justify-center items-center w-1/6 border-r bg-green-200">{{ data.sellerName }}</div>
-                                <div class="py-2 px-3 flex justify-center items-center w-1/6 border-r">{{ data.amount }}</div>
-                                <div class="py-2 px-3 flex justify-center items-center w-1/6 border-r">
-                                    <span dir='ltr'>{{ data.date.replace('-','/').replace('-','/') }}</span>
-                                </div>
-                                <div class="py-2 px-3 flex justify-center items-center w-1/6 border-r bg-green-200">{{ data.liquidity.replace(/\B(?=(\d{3})+(?!\d))/g, ",") }}</div>
-                            </RouterLink>
-
-                        </div>
-                    </div>
-                </div>
+            <div class="flex">
+                
+                <button class="flex justify-center items-center text-white rounded-l bg-blue-500 hover:bg-blue-600 px-2" @click="() =>{IsModalOpen = true}">
+                    <img :src="AddIconSVG" alt="+"/>
+                    <span>| کالای جدید</span>
+                </button>
             </div>
         </div>
+
+        <inventory v-if="state.tab == 1" :data="state.inventoryData"/>
+        <!-- <liquidity v-if="state.tab == 2"/> -->
     </main>
-<Loading v-if="loading"></Loading>
+<Loading v-if="state.loading"></Loading>
 <Modal v-if="IsModalOpen" :IsModalOpen="IsModalOpen" @update:IsModalOpen="updateIsModalOpen"></Modal>
 </template>
-<style scoped>
-input{
-    padding: 5px;
-}
-</style>

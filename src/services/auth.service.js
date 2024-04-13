@@ -1,7 +1,5 @@
 import axios from "axios";
-import serverURL from "../config/serverAddress";
-
-const API_URL = serverURL + "/api/";
+import apiPath from "../composables/api-path";
 
 class AuthService {
   async login(user) {
@@ -10,7 +8,7 @@ class AuthService {
       password: user.password,
     };
     return await axios
-      .post(API_URL + "login", data, {
+      .post(apiPath.auth.login, data, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -19,7 +17,7 @@ class AuthService {
         if (!res.data.token) {
           throw new Error("رمز عبور یا نام کاربری صحیح نمیباشد.");
         }
-        sessionStorage.setItem("token", res.data.token);
+        localStorage.setItem("token", res.data.token);
         return res.data;
       })
       .catch((error) => {
@@ -28,7 +26,7 @@ class AuthService {
   }
 
   logout() {
-    sessionStorage.clear();
+    localStorage.clear();
   }
 }
 

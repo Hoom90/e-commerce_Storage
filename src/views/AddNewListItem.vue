@@ -6,12 +6,12 @@ import ArrowIconSVG from '../assets/arrowLeftIcon.svg'
 import RemoveIconSVG from '../assets/removeIcon.svg'
 import InfoIconSVG from '../assets/infoIcon.svg'
 import Loading from '../components/loading.vue'
-import serverURL from '../config/serverAddress'
 import AddNewItem from '../components/addNewItem.vue'
 import router from '../config'
 import axios from 'axios'
 import dayjs from "dayjs";
 import jalaliday from "jalaliday";
+import apiPath from '../composables/api-path';
 dayjs.extend(jalaliday);
 
 let items = []
@@ -33,7 +33,7 @@ const FullDebt = ref(0)
 // GET
 const getData = async () => {
   loading.value = true;
-    await axios.get(serverURL + "/api/itemTransaction/")
+    await axios.get(apiPath.storage.getAll)
     .then((res) => {
         dbData.value = res.data;
     })
@@ -59,9 +59,9 @@ const postData = async () => {
         body.push(item)
     })
     // console.log(body);
-    await axios.post(serverURL + "/api/itemTransaction/list",body, {
+    await axios.post(apiPath.storage.addListItem,body, {
         headers: {
-            'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
+            'Authorization': 'Bearer ' + localStorage.getItem('token'),
         }
     })
     .then(

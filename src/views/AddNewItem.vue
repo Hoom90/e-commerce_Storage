@@ -1,16 +1,15 @@
 <script setup>
 import store from '../store';
-
 import ArrowIconSVG from "../assets/arrowLeftIcon.svg";
 import SearchIconSVG from "../assets/searchIcon.svg";
 import { ref } from "vue";
 import Loading from "../components/loading.vue";
-import serverURL from "../config/serverAddress";
 import router from "../config";
 import Form1 from '../components/form1.vue'
 import axios from "axios";
 import dayjs from "dayjs";
 import jalaliday from "jalaliday";
+import apiPath from '../composables/api-path';
 dayjs.extend(jalaliday);
 
 
@@ -37,7 +36,7 @@ const init = ref(true);
 const getData = async () => {
   loading.value = true;
   await axios
-    .get(serverURL + "/api/itemTransaction/")
+    .get(apiPath.storage.getSingleItem)
     .then((res) => {
         dbData.value = res.data;
     })
@@ -51,9 +50,9 @@ const getData = async () => {
 const postData = async () => {
   loading.value = true;
   const body = item
-  await axios.post(serverURL + "/api/itemTransaction", body, {
+  await axios.post(apiPath.storage.getSingleItem, body, {
       headers: {
-        Authorization: "Bearer " + sessionStorage.getItem("token"),
+        Authorization: "Bearer " + localStorage.getItem("token"),
       },
     })
     .then(
