@@ -1,4 +1,5 @@
 <script setup>
+import modalComp from '../components/modalComp.vue'
 import { onMounted, ref , reactive } from 'vue'
 import Loading from '../components/loading.vue'
 import RemoveIconSVG from '../assets/removeIcon.svg'
@@ -245,12 +246,15 @@ getData()
 
         <div class="flex justify-between border rounded">
             <p class="text-[24px] p-1 px-3">صندوق</p>
-            <button class="bg-teal-500 text-white p-1 px-3 rounded-l hover:bg-teal-600 shadow-md hover:shadow-none" @click="state.closeBalance = !state.closeBalance">بستن دخل</button>
+            <button class="bg-teal-500 text-white p-1 px-3 rounded-l hover:bg-teal-600 shadow-md hover:shadow-none"
+                @click="state.closeBalance = !state.closeBalance">بستن دخل</button>
         </div>
 
         <div class="w-full h-full lg:flex gap-3 my-3">
             <div class="lg:w-1/3 lg:order-2 mb-3 lg:mb-0">
-                <button class="bg-blue-500 text-white p-1 px-3 rounded hover:bg-blue-600 shadow-md hover:shadow-none w-full mb-3 h-[50px]" @click="newTransaction.modal = !newTransaction.modal">ثبت تراکنش</button>
+                <button
+                    class="bg-blue-500 text-white p-1 px-3 rounded hover:bg-blue-600 shadow-md hover:shadow-none w-full mb-3 h-[50px]"
+                    @click="newTransaction.modal = !newTransaction.modal">ثبت تراکنش</button>
                 <div class="border rounded min-h-[100px] p-3">
                     <p class="flex justify-between"><span>درآمد امروز: </span><span>{{ balanceData.income }}
                             (ریال)</span></p>
@@ -262,16 +266,20 @@ getData()
             </div>
             <div class="w-full border rounded lg:order-1">
                 <div class="flex text-center">
-                    <div class="py-2 px-3 w-full" v-for="item in ['نام کاربر', 'هزینه ها (ریال)', 'نوع پرداخت', 'توضیحات']">{{ item }}</div>
+                    <div class="py-2 px-3 w-full"
+                        v-for="item in ['نام کاربر', 'هزینه ها (ریال)', 'نوع پرداخت', 'توضیحات']">{{ item }}</div>
                 </div>
                 <div v-if="historyData != null" class="overflow-auto">
-                    <div v-for="(item,index) in historyData" class="flex border-t text-center hover:bg-[#e9e9e9] relative" :key="item.id">
+                    <div v-for="(item,index) in historyData"
+                        class="flex border-t text-center hover:bg-[#e9e9e9] relative" :key="item.id">
                         <div class="py-2 px-3 w-full">{{ item.receiverName }}</div>
                         <div class="py-2 px-3 w-full" dir="ltr">{{ item.amount }}</div>
                         <div class="py-2 px-3 w-full"> {{ item.type }}</div>
                         <div class="py-2 px-3 w-full">{{ item.description ? item.description : '-' }}</div>
-                        <button class="bg-red-500 p-1 rounded-md text-white hover:bg-red-600 shadow-lg hover:shadow-none" v-if="IsDeleteActive(index)" @click="deleteData(index)">
-                        <!-- <button class="absolute top-[50%] right-3 translate-y-[-50%] bg-red-500 p-1 rounded-md text-white hover:bg-red-600 shadow-lg hover:shadow-none" @click="deleteData(id)"> -->
+                        <button
+                            class="bg-red-500 p-1 rounded-md text-white hover:bg-red-600 shadow-lg hover:shadow-none"
+                            v-if="IsDeleteActive(index)" @click="deleteData(index)">
+                            <!-- <button class="absolute top-[50%] right-3 translate-y-[-50%] bg-red-500 p-1 rounded-md text-white hover:bg-red-600 shadow-lg hover:shadow-none" @click="deleteData(id)"> -->
                             <img :src="RemoveIconSVG" alt="RemoveIconSVG">
                         </button>
                     </div>
@@ -282,105 +290,110 @@ getData()
 
     <Loading v-if="loading"></Loading>
 
-    <div v-if="newTransaction.modal" class="fixed top-0 left-0 w-screen h-screen z-10">
-        <div class="flex justify-center items-center h-full w-full p-5">
-            <div class="bg-white w-[500px] h-[500px] rounded shadow-lg p-10 z-20">
-                <p class="text-[24px] font-bold text-center mb-3">
-                    ثبت تراکنش جدید
-                </p>
-                <!-- tabs -->
-                <div class="flex justify-center items-center">
-                    <div class="relative flex justify-center items-center gap-10">
-                        <button type="button" @click="modalTab.status = !modalTab.status">ورودی</button>
-                        <button type="button" @click="modalTab.status = !modalTab.status">خروجی</button>
-                        <div class="border-b border-2 absolute -bottom-1 border-blue-500 transition-all ease-in-out" :class="modalTab.status ? '-right-1 w-[50px]' : 'right-[80px] w-[60px]'"></div>
-                    </div>
-                </div>
-                <!-- tab1 -->
-                <div v-if="modalTab.status">
-                    <div class="mb-3">
-                        <span>حساب:</span>
-                        <input type="text" placeholder="نام مالک حساب" class="outline-none border rounded w-full" v-model="newTransaction.income.receiverNameIn">
-                    </div>
-                    <div class="mb-3">
-                        <span>مقدار:</span>
-                        <div class="flex gap-3">
-                            <select v-model="newTransaction.income.typeIn" class="w-full outline-none bg-transparent border rounded">
-                                <option value="کارتخوان1">کارتخوان1</option>
-                                <option value="کارتخوان2">کارتخوان2</option>
-                                <option value="بیسیم1">بیسیم1</option>
-                                <option value="بیسیم2">بیسیم2</option>
-                                <option value="چک1">چک1</option>
-                                <option value="چک2">چک2</option>
-                                <option value="نقدی">نقدی</option>
-                            </select>
-                            <div class="flex items-center border rounded w-full">
-                                <input type="text" placeholder="0" class="outline-none border-l w-full bg-transparent" v-model="newTransaction.income.paidIn" dir="ltr">
-                                <span>(ریال)</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <span>توضیحات:</span>
-                        <textarea type="text" v-model="newTransaction.income.descriptionIn" placeholder="توضیحات" rows="5"
-                            class="border rounded p-2 w-full outline-none col-span-3 resize-none"></textarea>
-                    </div>
-                    <div>
-                        <button type="button" class="bg-blue-500 text-white p-2 px-3 rounded w-full hover:bg-blue-600 shadow-md hover:shadow-none" @click="postEarning">ذخیره</button>
-                    </div>
-                </div>
-                <!--tab2 -->
-                <div v-if="!modalTab.status">
-                    <div class="mb-3">
-                        <span>نام:</span>
-                        <input type="text" class="w-full p-1 px-2 outline-none border rounded" placeholder="نام" v-model="newTransaction.outcome.receiverNameOut">
-                    </div>
-                    <div class="mb-3">
-                        <span>مقدار:</span>
-                        <div class="flex gap-3">
-                            <select v-model="newTransaction.outcome.typeOut" class="w-full p-1 px-2 outline-none border rounded">
-                                <option value="کارت به کارت">کارت به کارت</option>
-                                <option value="چک1">چک1</option>
-                                <option value="چک2">چک2</option>
-                                <option value="نقدی">نقدی</option>
-                            </select>
-                            <div class="flex items-center border rounded w-full">
-                                <input type="text" class="w-full p-1 px-2 outline-none border-l" placeholder="هزینه" v-model="newTransaction.outcome.paidOut">
-                                <span>(ریال)</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <span>توضیحات:</span>
-                        <textarea type="text" v-model="newTransaction.outcome.descriptionOut" placeholder="توضیحات" rows="5" class="border rounded p-2 w-full outline-none col-span-3 resize-none"></textarea>
-                    </div>
-                    <div>
-                        <button type="button" class="bg-blue-500 text-white p-2 px-3 rounded w-full hover:bg-blue-600 shadow-md hover:shadow-none" @click="postExpense">ذخیره</button>
-                    </div>
-                </div>
-    
-            </div>
-            
-            <div class="absolute w-full h-full bg-[#00000031] z-10" @click="newTransaction.modal = !newTransaction.modal"><!-- close modal action --></div>
-        </div>
-    </div>
+    <modalComp v-if="newTransaction.modal" @closeModal="(value) => newTransaction.modal = value" class="bg-white w-[500px] h-[550px] rounded shadow-lg p-10 z-20">
+        <p class="text-[24px] font-bold text-center mb-3">
+            ثبت تراکنش جدید
+        </p>
 
-    <div v-if="state.closeBalance" class="absolute top-0 left-0 w-screen h-screen flex justify-center items-center">
-        <div class="bg-white w-[300px] h-[280px] rounded shadow-lg p-10 z-20">
-            <p class="text-[24px] font-bold mb-3 text-center">
-                آیا مطمئن به بستن حساب امروز هستید؟
-            </p>
-            <div class="flex justify-center items-center gap-3 mt-10">
-                <button class="p-1 px-3 bg-blue-500 rounded text-white w-[200px] h-[50px] transition-all hover:scale-105 hover:bg-blue-600">بله</button>
-                <button class="p-1 px-3 border border-red-500 bg-white rounded text-red-500 w-[200px] h-[50px] transition-all hover:bg-red-500 hover:text-white hover:scale-105" @click="state.closeBalance = !state.closeBalance">خیر</button>
+        <div class="flex justify-center items-center">
+            <div class="relative flex justify-center items-center gap-10">
+                <button type="button" @click="modalTab.status = !modalTab.status">ورودی</button>
+                <button type="button" @click="modalTab.status = !modalTab.status">خروجی</button>
+                <div class="border-b border-2 absolute -bottom-1 border-blue-500 transition-all ease-in-out"
+                    :class="modalTab.status ? '-right-1 w-[50px]' : 'right-[80px] w-[60px]'"></div>
             </div>
         </div>
-        
-        <div class="absolute w-full h-full bg-[#00000031] z-10" @click="state.closeBalance = !state.closeBalance"><!-- close modal action --></div>
-    </div>
+
+        <div v-if="modalTab.status">
+            <div class="mb-3">
+                <span>حساب:</span>
+                <input type="text" placeholder="نام مالک حساب" class="outline-none border rounded w-full"
+                    v-model="newTransaction.income.receiverNameIn">
+            </div>
+            <div class="mb-3">
+                <span>مقدار:</span>
+                <div class="grid gap-3">
+                    <select v-model="newTransaction.income.typeIn"
+                        class="w-full p-1 px-2 outline-none bg-transparent border rounded">
+                        <option value="کارتخوان1">کارتخوان1</option>
+                        <option value="کارتخوان2">کارتخوان2</option>
+                        <option value="بیسیم1">بیسیم1</option>
+                        <option value="بیسیم2">بیسیم2</option>
+                        <option value="چک1">چک1</option>
+                        <option value="چک2">چک2</option>
+                        <option value="نقدی">نقدی</option>
+                    </select>
+                    <div class="flex items-center border rounded w-full">
+                        <input type="text" placeholder="0" class="outline-none border-l w-full bg-transparent"
+                            v-model="newTransaction.income.paidIn" dir="ltr">
+                        <span>(ریال)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <span>توضیحات:</span>
+                <textarea type="text" v-model="newTransaction.income.descriptionIn" placeholder="توضیحات" rows="5"
+                    class="border rounded p-2 w-full outline-none col-span-3 resize-none"></textarea>
+            </div>
+            <div>
+                <button type="button"
+                    class="bg-blue-500 text-white p-2 px-3 rounded w-full hover:bg-blue-600 shadow-md hover:shadow-none"
+                    @click="postEarning">ذخیره</button>
+            </div>
+        </div>
+
+        <div v-if="!modalTab.status">
+            <div class="mb-3">
+                <span>نام:</span>
+                <input type="text" class="w-full p-1 px-2 outline-none border rounded" placeholder="نام"
+                    v-model="newTransaction.outcome.receiverNameOut">
+            </div>
+            <div class="mb-3">
+                <span>مقدار:</span>
+                <div class="grid gap-3">
+                    <select v-model="newTransaction.outcome.typeOut"
+                        class="w-full p-1 px-2 outline-none border rounded">
+                        <option value="کارت به کارت">کارت به کارت</option>
+                        <option value="چک1">چک1</option>
+                        <option value="چک2">چک2</option>
+                        <option value="نقدی">نقدی</option>
+                    </select>
+                    <div class="flex items-center border rounded w-full">
+                        <input type="text" class="w-full p-1 px-2 outline-none border-l" placeholder="هزینه"
+                            v-model="newTransaction.outcome.paidOut">
+                        <span>(ریال)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <span>توضیحات:</span>
+                <textarea type="text" v-model="newTransaction.outcome.descriptionOut" placeholder="توضیحات" rows="5"
+                    class="border rounded p-2 w-full outline-none col-span-3 resize-none"></textarea>
+            </div>
+            <div>
+                <button type="button"
+                    class="bg-blue-500 text-white p-2 px-3 rounded w-full hover:bg-blue-600 shadow-md hover:shadow-none"
+                    @click="postExpense">ذخیره</button>
+            </div>
+        </div>
+    </modalComp>
+
+    <modalComp v-if="state.closeBalance" @closeModal="(value) => state.closeBalance = value"  class="bg-white w-[300px] h-[280px] rounded shadow-lg p-10 z-20">
+        <p class="text-[24px] font-bold mb-3 text-center">
+            آیا مطمئن به بستن حساب امروز هستید؟
+        </p>
+        <div class="flex justify-center items-center gap-3 mt-10">
+            <button
+                class="p-1 px-3 bg-blue-500 rounded text-white w-[200px] h-[50px] transition-all hover:scale-105 hover:bg-blue-600">بله</button>
+            <button
+                class="p-1 px-3 border border-red-500 bg-white rounded text-red-500 w-[200px] h-[50px] transition-all hover:bg-red-500 hover:text-white hover:scale-105"
+                @click="state.closeBalance = !state.closeBalance">خیر</button>
+        </div>
+    </modalComp>
 </template>
 
 <style scoped>
 input {
     padding: 5px;
-}</style>
+}
+</style>
