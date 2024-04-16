@@ -1,4 +1,5 @@
 <script setup>
+import axiosApi from "../composables/axios-api.js"
 import addTransitionComp from "./cashierView/addTransactionComp.vue"
 import closeBalanceComp from "./cashierView/closeBalanceComp.vue"
 import { onMounted, ref , reactive } from 'vue'
@@ -8,9 +9,6 @@ import axios from 'axios'
 import dayjs from 'dayjs'
 import jalaliday from 'jalaliday'
 dayjs.extend(jalaliday)
-
-let dbData = []
-
 const state = reactive({
     income:{
         receiverNameIn:null,
@@ -26,23 +24,23 @@ const state = reactive({
     },
     modal:false,
     closeBalance:false,
+    dbData:[],
+    historyData:[],
 })
 
 const balanceData = ref({ income: '', debt: '', current: '' })
-const historyData = ref(null)
 const loading = ref(false)
 const message = ref(null)
-let id = ref(null)
-
 
 onMounted(() => {
     state.income.typeIn = 'کارتخوان1'
     state.outcome.typeOut = 'کارت به کارت'
+    getData()
 })
 
 const getData = async () => {
     balanceData.value = { income: '', debt: '', current: '' }
-    historyData.value = null
+    state.historyData = []
     loading.value = true
     await getBalance()
     await getBalanceLogs()
@@ -53,34 +51,20 @@ const getData = async () => {
 
 // Get Today Transactions
 const getBalance = async () => {
-    await axios.get(import.meta.env.VITE_BASE_URL + "/balanceTransaction/" + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
-        (res) => {
-            dbData = res.data
-        }
-    )
-        .catch(function (error) { console.log(error), loading.value = false, message.value = error })
+    state.dbData = await axiosApi.get(`/balanceTransaction/${dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')}`)
+    .then((res) => res.data ?? [])
+    .catch(function (error) { console.log(error), loading.value = false, message.value = error })
 }
 
 // Get All Histories
 const getBalanceLogs = async () => {
-    await axios.get(import.meta.env.VITE_BASE_URL + "/balanceHistories/" + dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')).then(
-        (res) => {
-            historyData.value = res.data
-            // [
-            //     { id: 0, receiverName: 'محمد مهدوی', amount: '20,000', type: 'فروش', description: 'مرغ بهاران 2,150 گرم' },
-            //     { id: 1, receiverName: 'محمد مهدوی', amount: '-40,000', type: 'خرید', description: 'تعمیر یخچال مغازه' },
-            //     { id: 2, receiverName: 'محمد مهدوی', amount: '22,000', type: 'کارت به کارت' },
-            //     { id: 3, receiverName: 'محمد مهدوی', amount: '25,000,000', type: 'کارت به کارت' },
-            //     { id: 4, receiverName: 'محمد مهدوی', amount: '-5,000', type: 'خرید', description: 'نان تافتون 10 عدد' },
-            //     { id: 4, receiverName: 'محمد مهدوی', amount: '-5,000', type: 'خرید', description: 'نان تافتون 10 عدد' },
-            //     { id: 4, receiverName: 'محمد مهدوی', amount: '-5,000', type: 'خرید', description: 'نان تافتون 10 عدد' },
-            //     { id: 4, receiverName: 'محمد مهدوی', amount: '-5,000', type: 'خرید', description: 'نان تافتون 10 عدد' },
-            //     { id: 4, receiverName: 'محمد مهدوی', amount: '-5,000', type: 'خرید', description: 'نان تافتون 10 عدد' },
-            //     { id: 4, receiverName: 'محمد مهدوی', amount: '-5,000', type: 'خرید', description: 'نان تافتون 10 عدد' },
-            // ]
-        }
-    )
-        .catch((error) => { console.log(error), loading.value = false, message.value = error })
+    state.historyData = await axiosApi.get(`/balanceHistories/${dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD')}`)
+    .then((res) => res.data ?? [])
+    .catch((error) => { 
+        console.log(error)
+        loading.value = false
+        message.value = error
+    })
 }
 
 //POST
@@ -105,7 +89,7 @@ const postExpense = async () => {
         date: dayjs().calendar('jalali').locale('fa').format('YYYY-MM-DD'),
     };
     loading.value = true;
-    await axios.post(import.meta.env.VITE_BASE_URL + "/balanceTransaction/expense", body, {
+    await axiosApi.post("/balanceTransaction/expense", body, {
         headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('token'),
         }
@@ -147,7 +131,7 @@ const postEarning = async () => {
     };
     // console.log(body);
     loading.value = true;
-    await axios.post(import.meta.env.VITE_BASE_URL + "/balanceTransaction/earning", body, {
+    await axiosApi.post("/balanceTransaction/earning", body, {
         headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('token'),
         }
@@ -196,7 +180,7 @@ const deleteData = async (index) => {
 
 const calculateTodayBalance = () => {
     let current = 0, income = 0, debt = 0;
-    dbData.forEach(item => {
+    state.dbData.forEach(item => {
         if (parseInt(item.action) > 0) {
             income += parseInt(item.action)
         }
@@ -217,11 +201,11 @@ const calculateTodayBalance = () => {
 
 const formatHistoryData = () => {
     let temp = []
-    historyData.value.forEach(item => {
+    state.historyData.forEach(item => {
         item.amount = item.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
         temp.push(item)
     })
-    historyData.value = temp
+    state.historyData = temp
 }
 
 const IsDeleteActive = (index) => {
@@ -229,7 +213,6 @@ const IsDeleteActive = (index) => {
     // else return true
 }
 
-getData()
 </script>
 <template>
     <main class="relative">
@@ -264,8 +247,8 @@ getData()
                     <div class="py-2 px-3 w-full"
                         v-for="item in ['نام کاربر', 'هزینه ها (ریال)', 'نوع پرداخت', 'توضیحات']">{{ item }}</div>
                 </div>
-                <div v-if="historyData != null" class="overflow-auto">
-                    <div v-for="(item,index) in historyData"
+                <div v-if="state.historyData?.length > 0" class="overflow-auto">
+                    <div v-for="(item,index) in state.historyData"
                         class="flex border-t text-center hover:bg-[#e9e9e9] relative" :key="item.id">
                         <div class="py-2 px-3 w-full">{{ item.receiverName }}</div>
                         <div class="py-2 px-3 w-full" dir="ltr">{{ item.amount }}</div>
