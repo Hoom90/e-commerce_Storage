@@ -1,6 +1,6 @@
 <script setup>
 const props = defineProps(['class'])
-const emits = defineEmits(['closeModal'])
+const emits = defineEmits(['blur'])
 </script>
 <template>
     <div class="fixed top-0 left-0 w-screen h-screen z-10">
@@ -9,7 +9,7 @@ const emits = defineEmits(['closeModal'])
                 <slot/>
             </div>
 
-            <div class="absolute w-full h-full bg-[#00000031] z-10" @click="emits('closeModal',false)"><!-- close modal action --></div>
+            <div class="absolute w-full h-full bg-[#00000031] z-10" @click="emits('blur',false)"><!-- close modal action --></div>
         </div>
     </div>
 </template>
