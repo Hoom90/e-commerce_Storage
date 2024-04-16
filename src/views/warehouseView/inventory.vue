@@ -1,5 +1,5 @@
 <script setup>
-import SearchIconSVG from '../../../assets/searchIcon.svg'
+// import SearchIconSVG from '../../assets/svg/searchIcon.svg'
 const props = defineProps(['data'])
 </script>
 <template>
@@ -10,7 +10,7 @@ const props = defineProps(['data'])
             <input type="text" class="outline-none bg-transparent block w-full p-3" placeholder="جستجوی نام کالا"
             @input="searchMainTable" id="TableSearchBox">
             <!-- <input type="text" class="outline-none px-1 bg-transparent hidden" placeholder="جستجوی" @input="searchLiquidityTable" id="TableSearchBox"> -->
-            <img :src="SearchIconSVG" alt="SearchIconSVG">
+            <!-- <img :src="SearchIconSVG" alt="SearchIconSVG"> -->
         </div>
 
         <!-- header -->

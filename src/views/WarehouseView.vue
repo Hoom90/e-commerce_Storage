@@ -1,10 +1,10 @@
 <script setup>
-import inventory from './warehouseView/component/inventory.vue'
+import modalComp from "../components/modalComp.vue"
+import inventory from './warehouseView/inventory.vue'
 import AddIconSVG from '../assets/addIcon.svg'
 import InfoIconSVG from '../assets/infoIcon.svg'
 import { onMounted, ref ,reactive } from 'vue'
 import Loading from '../components/loading.vue'
-import Modal from '../components/wareHouseModal.vue'
 import axios from 'axios'
 import apiPath from '../composables/api-path'
 
@@ -150,7 +150,7 @@ const updateIsModalOpen = (value) =>{
         </button> -->
 
         <div class="flex justify-between border rounded">
-            <p class="text-[24px] p-1 px-5">ثبت کالا</p>
+            <p class="text-[24px] p-1 px-3">ثبت کالا</p>
             <div class="justify-center items-center gap-10 relative hidden sm:flex">
                 <button class="flex justify-center items-center w-full h-full" @click="state.tab = 1">قیمت</button>
                 <button class="flex justify-center items-center w-full h-full" @click="state.tab = 2">نقدینگی</button>
@@ -171,6 +171,21 @@ const updateIsModalOpen = (value) =>{
         <inventory v-if="state.tab == 1" :data="state.inventoryData"/>
         <!-- <liquidity v-if="state.tab == 2"/> -->
     </main>
-<Loading v-if="state.loading"></Loading>
-<Modal v-if="IsModalOpen" :IsModalOpen="IsModalOpen" @update:IsModalOpen="updateIsModalOpen"></Modal>
+    <Loading v-if="state.loading"></Loading>
+    <modalComp v-if="IsModalOpen" :IsModalOpen="IsModalOpen" @update:IsModalOpen="updateIsModalOpen">
+        <div class="flex flex-nowrap justify-center items-center w-full gap-1 h-screen text-white ">
+            <button class="flex justify-center items-center bg-red-500 hover:bg-red-600 w-[50px] h-[50px] rounded absolute top-5 right-5" @click="handleIsModalOpen">
+                <img :src="ArrowIconSVG" alt="x">
+            </button>
+            <RouterLink to="/warehouse/newItem" class="flex justify-center items-center bg-blue-500 hover:bg-blue-600 w-[200px] h-[100px] rounded">
+                افزودن تک کالا
+            </RouterLink>
+            <RouterLink to='/warehouse/newlist' class="flex justify-center items-center bg-teal-500 hover:bg-teal-600 w-[200px] h-[100px] rounded">
+                افزودن فاکتور
+            </RouterLink>
+            <RouterLink to='/warehouse/newOrder' class="flex justify-center items-center bg-green-500 hover:bg-green-600 w-[200px] h-[100px] rounded">
+                افزودن فروش
+            </RouterLink>
+        </div>
+    </modalComp>
 </template>
