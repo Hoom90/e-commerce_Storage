@@ -10,7 +10,7 @@ const state = reactive({
 })
 </script>
 <template>
-    <modalComp @blur="(value) => closeForm(value)" class="bg-white w-[500px] h-[550px] rounded shadow-lg p-10 z-20">
+    <modalComp @blur="(value) => emits('closeForm',value)" class="bg-white w-[500px] h-[550px] rounded shadow-lg p-10 z-20">
         <p class="text-[24px] font-bold text-center mb-3">ثبت تراکنش جدید</p>
 
         <div class="flex justify-center items-center">

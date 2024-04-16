@@ -3,7 +3,7 @@ import modalComp from "../../components/modalComp.vue"
 const emits = defineEmits('close')
 </script>
 <template>
-    <modalComp @blur="emits('close',false)" class="absolute top-0 left-0 w-screen h-screen flex justify-center items-center">
+    <modalComp @blur="(value) => emits('close',value)" class="absolute top-0 left-0 w-screen h-screen flex justify-center items-center">
         <div class="bg-white w-[300px] h-[280px] rounded shadow-lg p-10 z-20">
             <p class="text-[24px] font-bold mb-3 text-center">
                 آیا مطمئن به بستن حساب امروز هستید؟
