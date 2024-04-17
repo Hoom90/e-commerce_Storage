@@ -14,7 +14,7 @@ import apiPath from "./composables/api-path";
 
 import Loading from "./components/loading.vue";
 import AddNewItem from "./components/addNewItem.vue";
-import error from "../components/error.vue"
+import error from "./components/error.vue"
 import modalComp from "./components/modalComp.vue";
 
 import SearchIconSVG from "./assets/searchIcon.svg";

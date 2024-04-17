@@ -18,10 +18,11 @@ const message = ref(null)
 const loading = ref(false)
 const openError = ref(false)
 const errorMessage = ref(null)
-
+const instance = getCurrentInstance()
+const axiosApi = instance.appContext.config.globalProperties.$axiosApi
 const getData = async () => {
     loading.value = true;
-    await axios.get(apiPath.storage.getSingleItem(route.currentRoute.value.params.id))
+    await axiosApi.get(apiPath.storage.getSingleItem(route.currentRoute.value.params.id))
     .then((res)=>{
         item = 
         {
@@ -54,7 +55,7 @@ const patchData  = async() =>{
     }
     item.update = dayjs().calendar('jalali').locale('fa').format('YYYY/MM/DD')
     const body = item
-    await axios.patch(apiPath.storage.editSingleItem(route.currentRoute.value.params.id), body, {
+    await axiosApi.patch(apiPath.storage.editSingleItem(route.currentRoute.value.params.id), body, {
         headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('token'),
         }
@@ -81,7 +82,7 @@ const deleteData  = async() =>{
         'Authorization': 'Bearer ' + localStorage.getItem('token'),
     }
     loading.value = true
-    await axios.delete(apiPath.storage.deleteSingleItem(route.currentRoute.value.params.id),{headers,data:body})
+    await axiosApi.delete(apiPath.storage.deleteSingleItem(route.currentRoute.value.params.id),{headers,data:body})
     .then(
         router.push('/warehouse')
     )

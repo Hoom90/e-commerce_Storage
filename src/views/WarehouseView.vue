@@ -1,7 +1,9 @@
 <script setup>
 import modalComp from "../components/modalComp.vue"
 import inventory from './warehouseView/inventory.vue'
-import { onMounted, ref ,reactive } from 'vue'
+import { onMounted, ref ,reactive ,getCurrentInstance } from 'vue'
+const instance = getCurrentInstance()
+const axiosApi = instance.appContext.config.globalProperties.$axiosApi
 
 const state = reactive({
     inventoryData: [],
@@ -27,7 +29,7 @@ onMounted(()=>{
 // Get All Items
 const getData = async()=> {
     state.loading = true
-    await axios.get(apiPath.storage.getAll)
+    await axiosApi.get(apiPath.storage.getAll)
     .then((res) => {
         state.inventoryData = res.data;
         message.value = 'کالایی یافت نشد!'

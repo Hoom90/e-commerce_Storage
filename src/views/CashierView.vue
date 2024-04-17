@@ -1,8 +1,10 @@
 <script setup>
 import addTransitionComp from "./cashierView/addTransactionComp.vue"
 import closeBalanceComp from "./cashierView/closeBalanceComp.vue"
-import { onMounted, ref , reactive } from 'vue'
-// const axiosApi = useContext().$axiosApi
+import { onMounted, ref , reactive , getCurrentInstance } from 'vue'
+const instance = getCurrentInstance()
+const axiosApi = instance.appContext.config.globalProperties.$axiosApi
+const dayjs = instance.appContext.config.globalProperties.$dayjs
 const state = reactive({
     income:{
         receiverNameIn:null,

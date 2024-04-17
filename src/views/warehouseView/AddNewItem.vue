@@ -14,7 +14,8 @@ let item = {
   type:'',
   description:'',
 }
-
+const instance = getCurrentInstance()
+const axiosApi = instance.appContext.config.globalProperties.$axiosApi
 const dbData = ref(null);
 const loading = ref(false);
 const message = ref(null);
@@ -23,8 +24,7 @@ const init = ref(true);
 //#region API
 const getData = async () => {
   loading.value = true;
-  await axios
-    .get(apiPath.storage.getSingleItem)
+  await axiosApi.get(apiPath.storage.getSingleItem)
     .then((res) => {
         dbData.value = res.data;
     })
@@ -38,7 +38,7 @@ const getData = async () => {
 const postData = async () => {
   loading.value = true;
   const body = item
-  await axios.post(apiPath.storage.getSingleItem, body, {
+  await axiosApi.post(apiPath.storage.getSingleItem, body, {
       headers: {
         Authorization: "Bearer " + localStorage.getItem("token"),
       },

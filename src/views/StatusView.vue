@@ -1,10 +1,12 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref ,getCurrentInstance } from 'vue'
 const balanceHistories = ref(null)
 const itemHistories = ref(null)
 
 const message = ref(null)
 const loading = ref(false)
+const instance = getCurrentInstance()
+const axiosApi = instance.appContext.config.globalProperties.$axiosApi
 
 onMounted(async()=>{
     document.querySelector("#selectedDateIncome").innerText = 0
@@ -23,7 +25,7 @@ const getData = async() => {
 
 // Get All Balance History
 const getBalanceHistories = async () =>{
-    await axios.get(import.meta.env.VITE_BASE_URL + "/balanceHistories/").then(res =>{
+    await axiosApi.get(import.meta.env.VITE_BASE_URL + "/balanceHistories/").then(res =>{
         let data = res.data
         let sample = [];
         // find All Dates which has History
@@ -45,7 +47,7 @@ const getBalanceHistories = async () =>{
 
 // Get All Item History
 const getItemHistories = async () =>{
-    await axios.get(import.meta.env.VITE_BASE_URL + "/itemHistories/").then(res =>{
+    await axiosApi.get(import.meta.env.VITE_BASE_URL + "/itemHistories/").then(res =>{
         let data = res.data
         let sample = [];
         // find All Dates which has History

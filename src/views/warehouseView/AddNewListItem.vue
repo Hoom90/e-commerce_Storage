@@ -8,7 +8,8 @@ let tempItems = {
     date:'',
     description:''
 }
-
+const instance = getCurrentInstance()
+const axiosApi = instance.appContext.config.globalProperties.$axiosApi
 const dbData = ref(null)
 const loading = ref(false)
 const message = ref(null)
@@ -19,7 +20,7 @@ const FullDebt = ref(0)
 // GET
 const getData = async () => {
   loading.value = true;
-    await axios.get(apiPath.storage.getAll)
+    await axiosApi.get(apiPath.storage.getAll)
     .then((res) => {
         dbData.value = res.data;
     })
@@ -45,7 +46,7 @@ const postData = async () => {
         body.push(item)
     })
     // console.log(body);
-    await axios.post(apiPath.storage.addListItem,body, {
+    await axiosApi.post(apiPath.storage.addListItem,body, {
         headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('token'),
         }

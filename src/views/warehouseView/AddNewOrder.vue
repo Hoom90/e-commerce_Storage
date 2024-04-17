@@ -4,7 +4,8 @@ const dbData = ref(null)
 const balanceData = ref(null)
 const message = ref(null)
 const loading = ref(false)
-
+const instance = getCurrentInstance()
+const axiosApi = instance.appContext.config.globalProperties.$axiosApi
 let name = ref(null)
 let amount = ref(null)
 let unit = ref(null)
@@ -15,7 +16,7 @@ let description = ref(null)
 // GET
 const getData = async () => {
     loading.value = true
-    await axios.get(apiPath.storage.getAll)
+    await axiosApi.get(apiPath.storage.getAll)
     .then((res)=>{
         dbData.value = res.data;
     })
@@ -56,7 +57,7 @@ const putData = async () => {
         description : tempDescription
     }
     // console.log(body);
-    await axios.put(apiPath.storage.orderSingleItem(id), body,{headers: {
+    await axiosApi.put(apiPath.storage.orderSingleItem(id), body,{headers: {
         'Authorization': 'Bearer ' + localStorage.getItem('token'),
     }})
     .then(
