@@ -1,19 +1,5 @@
 <script setup>
-import store from '../store';
-
-import { onMounted, ref } from 'vue'
-import ArrowIconSVG from '../assets/arrowLeftIcon.svg'
-import RemoveIconSVG from '../assets/removeIcon.svg'
-import InfoIconSVG from '../assets/infoIcon.svg'
-import Loading from '../components/loading.vue'
-import AddNewItem from '../components/addNewItem.vue'
-import router from '../config'
-import axios from 'axios'
-import dayjs from "dayjs";
-import jalaliday from "jalaliday";
-import apiPath from '../composables/api-path';
-dayjs.extend(jalaliday);
-
+import { ref } from 'vue'
 let items = []
 let tempItems = {
     cost:'',

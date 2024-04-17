@@ -1,5 +1,4 @@
 <script setup>
-import modalComp from "../../components/modalComp.vue"
 const emits = defineEmits(['close'])
 </script>
 <template>

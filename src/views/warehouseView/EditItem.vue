@@ -1,18 +1,5 @@
 <script setup>
-import store from '../store';
-
 import { ref } from 'vue'
-import Loading from '../components/loading.vue'
-import ArrowIconSVG from '../assets/arrowLeftIcon.svg'
-import router from '../config'
-import route from '../config'
-import dayjs from 'dayjs'
-import jalaliday from 'jalaliday'
-import axios from 'axios'
-import apiPath from '../composables/api-path';
-
-dayjs.extend(jalaliday)
-
 let item = {
     name:'',
     sellerName:'',

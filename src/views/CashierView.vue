@@ -1,14 +1,8 @@
 <script setup>
-import axiosApi from "../composables/axios-api.js"
 import addTransitionComp from "./cashierView/addTransactionComp.vue"
 import closeBalanceComp from "./cashierView/closeBalanceComp.vue"
 import { onMounted, ref , reactive } from 'vue'
-import Loading from '../components/loading.vue'
-import RemoveIconSVG from '../assets/removeIcon.svg'
-import axios from 'axios'
-import dayjs from 'dayjs'
-import jalaliday from 'jalaliday'
-dayjs.extend(jalaliday)
+// const axiosApi = useContext().$axiosApi
 const state = reactive({
     income:{
         receiverNameIn:null,

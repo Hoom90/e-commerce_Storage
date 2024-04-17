@@ -1,6 +1,5 @@
 <script setup>
 import { reactive } from 'vue';
-import modalComp from "../../components/modalComp.vue"
 import tab1Comp from "./addTransactionComp/tab1Comp.vue"
 import tab2Comp from "./addTransactionComp/tab2Comp.vue"
 const props = defineProps(['income','outcome'])

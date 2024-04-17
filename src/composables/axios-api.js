@@ -13,13 +13,15 @@ const HttpClient = axios.create({
 
 HttpClient.interceptors.request.use(
   (config) => {
-    clearTimeout(timerLoading);
-    timerLoading = setTimeout(() => {
-      // common.globalLoading();
-      // در حال بارگزاری
-    }, 500);
+    // clearTimeout(timerLoading);
+    // timerLoading = setTimeout(() => {
+    //   // common.globalLoading();
+    //   // در حال بارگزاری
+    // }, 500);
     const token = localStorage.getItem('token')
-    token ? config.headers["authorization"] = `Bearer ${token}` : ''
+    if (token) {
+      config.headers["authorization"] = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
@@ -30,7 +32,7 @@ HttpClient.interceptors.request.use(
 
 HttpClient.interceptors.response.use(
   (response) => {
-    clearTimeout(timerLoading);
+    // clearTimeout(timerLoading);
 
     // common.endLoading();
       // اتمام در حال بارگزاری 
@@ -45,7 +47,7 @@ HttpClient.interceptors.response.use(
     return response.data || null;
   },
   (error) => {
-    clearTimeout(timerLoading);
+    // clearTimeout(timerLoading);
 
        // common.endLoading();
       // اتمام در حال بارگزاری 

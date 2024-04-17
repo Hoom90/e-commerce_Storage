@@ -1,18 +1,6 @@
 <script setup>
-import store from '../store';
-import ArrowIconSVG from "../assets/arrowLeftIcon.svg";
-import SearchIconSVG from "../assets/searchIcon.svg";
 import { ref } from "vue";
-import Loading from "../components/loading.vue";
-import router from "../config";
-import Form1 from '../components/form1.vue'
-import axios from "axios";
-import dayjs from "dayjs";
-import jalaliday from "jalaliday";
-import apiPath from '../composables/api-path';
-dayjs.extend(jalaliday);
-
-
+import Form1 from '../../components/form1.vue'
 let item = {
   name:'',
   sellerName:'',

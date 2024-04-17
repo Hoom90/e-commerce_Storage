@@ -1,17 +1,5 @@
 <script setup>
 import { ref } from 'vue'
-import CloseIconSVG from '../assets/removeIcon.svg'
-import SearchIconSVG from '../assets/searchIcon.svg'
-import PlusIconSVG from '../assets/addIcon.svg'
-import MinusIconSVG from '../assets/reduceIcon.svg'
-import Loading from '../components/loading.vue'
-import router from '../config'
-import axios from 'axios'
-import dayjs from 'dayjs'
-import jalaliday from 'jalaliday'
-import apiPath from '../composables/api-path'
-dayjs.extend(jalaliday)
-
 const dbData = ref(null)
 const balanceData = ref(null)
 const message = ref(null)

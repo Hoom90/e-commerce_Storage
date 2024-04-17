@@ -1,13 +1,5 @@
 <script setup>
-import axios from 'axios';
 import { onMounted, ref } from 'vue'
-import SearchIconSVG from '../assets/searchIcon.svg'
-import Loading from '../components/loading.vue'
-import router from '../config'
-import dayjs from 'dayjs'
-import jalaliday from 'jalaliday'
-dayjs.extend(jalaliday)
-
 const balanceHistories = ref(null)
 const itemHistories = ref(null)
 
@@ -31,7 +23,7 @@ const getData = async() => {
 
 // Get All Balance History
 const getBalanceHistories = async () =>{
-    await axios.get(import.meta.env.VITE_BASE_URL + "/balanceHistories/").then(res =>{
+    await axiosApi.get("/balanceHistories/").then(res =>{
         let data = res.data
         let sample = [];
         // find All Dates which has History
@@ -68,7 +60,7 @@ const getBalanceHistories = async () =>{
 
 // Get All Item History
 const getItemHistories = async () =>{
-    await axios.get(import.meta.env.VITE_BASE_URL + "/itemHistories/").then(res =>{
+    await axiosApi.get("/itemHistories/").then(res =>{
         let data = res.data
         let sample = [];
         // find All Dates which has History

@@ -1,13 +1,5 @@
 <script setup>
-import axios from 'axios';
 import { onMounted, ref } from 'vue'
-import SearchIconSVG from '../assets/searchIcon.svg'
-import Loading from '../components/loading.vue'
-import router from '../config'
-import dayjs from 'dayjs'
-import jalaliday from 'jalaliday'
-dayjs.extend(jalaliday)
-
 const balanceHistories = ref(null)
 const itemHistories = ref(null)
 

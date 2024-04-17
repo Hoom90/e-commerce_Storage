@@ -3,13 +3,13 @@ import LoginView from "../views/LoginView.vue";
 import Warehouse from "../views/WarehouseView.vue";
 import Cashier from "../views/CashierView.vue";
 import Status from "../views/StatusView.vue";
-import StatusByWeek from "../views/StatusByWeekView.vue";
-import StatusByMonth from "../views/StatusByMonthView.vue";
-import StatusByYear from "../views/StatusByYearView.vue";
-import AddNewItem from "../views/AddNewItem.vue";
-import AddNewListItem from "../views/AddNewListItem.vue";
-import AddNewOrder from "../views/AddNewOrder.vue";
-import EditItem from "../views/EditItem.vue";
+import StatusByWeek from "../views/statusView/StatusByWeekView.vue";
+import StatusByMonth from "../views/statusView/StatusByMonthView.vue";
+import StatusByYear from "../views/statusView/StatusByYearView.vue";
+import AddNewItem from "../views/warehouseView/AddNewItem.vue";
+import AddNewListItem from "../views/warehouseView/AddNewListItem.vue";
+import AddNewOrder from "../views/warehouseView/AddNewOrder.vue";
+import EditItem from "../views/warehouseView/EditItem.vue";
 import { reactive } from "vue";
 
 const state = reactive({

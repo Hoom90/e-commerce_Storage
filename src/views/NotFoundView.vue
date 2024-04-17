@@ -1,6 +1,3 @@
-<script>
-</script>
-
 <template>
   <div class="flex flex-col justify-center text-center p-[20px]">
     <div class="m-10 text-[25px]">این صفحه وجود ندارد....404</div>

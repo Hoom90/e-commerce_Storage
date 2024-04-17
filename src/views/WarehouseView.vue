@@ -1,12 +1,7 @@
 <script setup>
 import modalComp from "../components/modalComp.vue"
 import inventory from './warehouseView/inventory.vue'
-import AddIconSVG from '../assets/addIcon.svg'
-import InfoIconSVG from '../assets/infoIcon.svg'
 import { onMounted, ref ,reactive } from 'vue'
-import Loading from '../components/loading.vue'
-import axios from 'axios'
-import apiPath from '../composables/api-path'
 
 const state = reactive({
     inventoryData: [],
