@@ -1,6 +1,6 @@
 <script setup>
 import modalComp from "../../components/modalComp.vue"
-const emits = defineEmits('close')
+const emits = defineEmits(['close'])
 </script>
 <template>
     <modalComp @blur="(value) => emits('close',value)" class="absolute top-0 left-0 w-screen h-screen flex justify-center items-center">
